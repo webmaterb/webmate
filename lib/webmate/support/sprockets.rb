@@ -17,7 +17,11 @@ module Sinatra
       end
 
       # require webmate assets
-      webmate_path = Gem::Specification.find_by_name("webmate").full_gem_path
+      webmate_path = if Gem::Specification.respond_to?(:find_by_name)
+        Gem::Specification.find_by_name("webmate").full_gem_path
+      else
+        Gem.source_index.search("webmate").first.full_gem_path
+      end
       ['stylesheets', 'javascripts', 'images'].each do |dir|
         environment.append_path(File.join(webmate_path, 'vendor', 'assets', dir))
       end
