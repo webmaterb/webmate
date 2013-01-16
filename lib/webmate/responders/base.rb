@@ -23,7 +23,7 @@ module Webmate::Responders
       if handler = handler_for_rescue(exception)
         handler.arity != 0 ? handler.call(exception) : handler.call
       else
-        raise(e)
+        raise(exception)
       end
     end
 
