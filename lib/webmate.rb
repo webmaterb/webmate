@@ -36,8 +36,23 @@ module Decorators; end;
 module Observers; end;
 
 require "#{WEBMATE_ROOT}/config/config"
+
 configatron.app.load_paths.each do |path|
-  Dir["#{WEBMATE_ROOT}/#{path}/**/*.rb"].each { |app_class| require_relative(app_class) }
+  Dir[ File.join( WEBMATE_ROOT, path, '/**/*.rb') ].each do |file|
+    module_name = File.dirname(file).split('/').last
+    class_name = File.basename(file, '.rb')
+    if configatron.app.namespaced_classes.include?(module_name)
+      eval <<-EOV
+        module #{module_name.camelize}
+          autoload :#{class_name.camelize}, "#{file}"
+        end
+      EOV
+    else
+      eval <<-EOV
+        autoload :#{class_name.camelize}, "#{file}"
+      EOV
+    end
+  end
 end
 
 class Webmate::Application
