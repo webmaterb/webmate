@@ -14,6 +14,7 @@ module Webmate::Observers
       end
 
       def execute_all(action, data)
+        self.subscriptions ||= {}
         (self.subscriptions[action] || []).each do |block|
           block.call(data)
         end
