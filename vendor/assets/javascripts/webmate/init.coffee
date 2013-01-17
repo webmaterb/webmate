@@ -1,4 +1,5 @@
-window.Webmate = {}
+if !window.Webmate
+  window.Webmate = {}
 window.Webmate.channels = {}
 
 window.App = {}

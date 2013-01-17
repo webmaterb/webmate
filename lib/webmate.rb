@@ -29,6 +29,7 @@ require 'webmate/services/base'
 require 'webmate/observers/base'
 require 'webmate/decorators/base'
 require 'webmate/route_helpers/channels'
+require 'webmate/views/helpers'
 
 module Responders; end;
 module Services; end;
@@ -61,6 +62,7 @@ class Webmate::Application
   register Sinatra::Reloader
   register SinatraMore::MarkupPlugin
 
+  helpers Webmate::Views::Helpers
   helpers Sinatra::Cookies
   helpers Sinatra::Sprockets::Helpers
 

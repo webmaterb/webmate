@@ -16,4 +16,7 @@ Webmate::Application.configure do |config|
   config.cookies.key = Configatron::Delayed.new { "_#{configatron.app.name}_session" }
   config.cookies.domain = nil
   config.cookies.secret = "65e604cae451847ff2722ba84cb13db90f1b0a9ddc35a37169bec"
+
+  config.websockets.enabled = true
+  config.websockets.port = 80
 end

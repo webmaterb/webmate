@@ -3,9 +3,9 @@ class Webmate.Client
     self = @
     @bindings = {}
     @channel = channel
-    @fullPath = "#{location.host}/#{channel}"
+    @fullPath = "#{location.hostname}:#{Webmate.websocketsPort or location.port}/#{channel}"
     @clientId = Math.random().toString(36).substr(2)
-    if window.WebSocket
+    if window.Webmate.websocketsEnabled isnt false && window.WebSocket
       @websocket = new WebSocket("ws://#{@fullPath}")
       @websocket.onmessage = (e)->
         data = JSON.parse(e.data)
@@ -15,7 +15,10 @@ class Webmate.Client
       @websocket.onopen = (e)->
         callback()
     else
-      console.log("Websocket not supported. Using http.")
+      if window.Webmate.websocketsEnabled is false
+        console.log("Websockets is disabled. Using http.")
+      else
+        console.log("Websocket not supported. Using http.")
       callback()
     @
   on: (action, callback)->
