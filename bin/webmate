@@ -1,13 +1,19 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
+command = ARGV.shift
 
-require './config/environment'
-
-if ARGV.first == "server"
+case command
+when "server"
+  require './config/environment'
   require 'thin'
   Thin::Runner.new(["start"]).run!
-elsif ARGV.first == "console"
+when "console"
   require 'irb'
+  ENV["RACK_ENV"] ||= ARGV.first || 'development'
+  puts "Running Webmate console with env: #{ENV["RACK_ENV"]}"
+  require './config/environment'
   ARGV.clear
   IRB.start
+else
+  puts "Don't know how to process command: #{command}"
 end
