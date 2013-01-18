@@ -1,4 +1,5 @@
 require 'yajl'
+require 'em-hiredis'
 module Webmate
   module RouteHelpers
     module Channels
@@ -7,16 +8,25 @@ module Webmate
         channel.define_actions(&block)
         get "/#{path}" do
           pass unless request.websocket?
+
+          websocket_publisher = settings._websocket_redis_publisher
+          websocket_subscriber = settings._websocket_redis_subscriber
+          websocket_subscriber.subscribe(request.path)
+          websocket_subscriber.on(:message){|channel, message|
+            settings._websocket_channels[channel].each{|s| s.send(message) }
+          }
           request.websocket do |ws|
             ws.onopen do
-              settings._websockets[request.path] ||= []
-              settings._websockets[request.path] << ws
+              settings._websocket_channels[request.path] ||= []
+              settings._websocket_channels[request.path] << ws
             end
             ws.onmessage do |msg|
               request.params.merge! Yajl::Parser.new(symbolize_keys: true).parse(msg)
               response = RouterChannel.respond_to(path, request)
               if response.first == 200
-                settings._websockets[request.path].each{|s| s.send(response.last) }
+                websocket_publisher.publish(request.path, response.last).errback { |e|
+                  puts(e)
+                }
               end
               puts "WebSocket #{path} #{request.params[:action]} #{response.first}"
               puts "Params: #{request.params.inspect}"
@@ -24,7 +34,7 @@ module Webmate
             end
             ws.onclose do
               warn("websocket closed")
-              settings._websockets[request.path].delete(ws)
+              settings._websocket_channels[request.path].delete(ws)
             end
           end
         end

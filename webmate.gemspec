@@ -27,4 +27,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency("configatron")
   gem.add_dependency("rack-contrib")
   gem.add_dependency("sinatra_more")
+  gem.add_dependency("em-hiredis")
 end

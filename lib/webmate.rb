@@ -66,11 +66,15 @@ class Webmate::Application
   helpers Sinatra::Cookies
   helpers Sinatra::Sprockets::Helpers
 
-  set :_websockets, {}
+  set :_websocket_channels, {}
+  set :_websocket_redis_publisher, Proc.new { @_websocket_redis_publisher ||= EM::Hiredis.connect }
+  set :_websocket_redis_subscriber, Proc.new { @_websocket_redis_subscriber ||= EM::Hiredis.connect }
+
   set :public_path, '/public'
   set :root, WEBMATE_ROOT
   set :views, Proc.new { File.join(root, 'app', "views") }
   set :reloader, !configatron.app.cache_classes
+
   # auto-reloading dirs
   also_reload("#{WEBMATE_ROOT}/config/config.rb")
   also_reload("#{WEBMATE_ROOT}/config/application.rb")
