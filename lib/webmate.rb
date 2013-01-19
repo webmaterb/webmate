@@ -1,5 +1,6 @@
 ENV["RACK_ENV"] ||= "development"
 
+require "em-synchrony"
 require "sinatra"
 require "sinatra/cookies"
 require "sinatra/reloader"
