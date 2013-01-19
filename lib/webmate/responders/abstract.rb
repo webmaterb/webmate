@@ -24,6 +24,16 @@ module Webmate::Responders
       rescue_with_handler(e)
     end
 
+    def respond_with(response, options = {})
+      if @response.is_a?(Response)
+        @response = response
+      else
+        default_options = {status: 200, params: params}
+        options = default_options.merge(options)
+        @response = Response.new(response, options)
+      end
+    end
+
     def rescue_with_handler(exception)
       if handler = handler_for_rescue(exception)
         handler.arity != 0 ? handler.call(exception) : handler.call
@@ -34,7 +44,7 @@ module Webmate::Responders
 
     def process_action
       raise ActionNotFound unless respond_to?(action_method)
-      @response = Response.new(send(action_method), status: 200, params: params)
+      respond_with send(action_method)
     end
 
     def render_not_found

@@ -45,6 +45,9 @@ class Webmate.Client
       collectionName = obj.collectionName()
       collectionInstance = App[collectionName]
       return unless collectionInstance
+      self.on "#{collectionName}/update", (response, params)->
+        return unless response._id
+        collectionInstance.get(response._id).set(response)
       self.on "#{collectionName}/read", (response, params)->
         collectionInstance.reset(response)
         collectionInstance.trigger "sync", collectionInstance, response

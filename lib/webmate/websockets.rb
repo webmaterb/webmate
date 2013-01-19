@@ -4,7 +4,7 @@ module Webmate
     class << self
 
       def subscribe(request, &block)
-        channel = request.path.gsub(/^\//, '')
+        channel = channel_from_path(request.path)
         init_connection
         subscriber.subscribe(channel)
         request.websocket do |ws|
@@ -42,6 +42,12 @@ module Webmate
         }
         self.channels ||= {}
         @initialized_connection = true
+      end
+
+      def channel_from_path(path, action = nil)
+        channel = path.gsub(/^\//, '').gsub(/\/$/, '')
+        channel = channel.gsub(/#{action}$/, '') if action
+        channel.gsub(/\/$/, '')
       end
     end
   end

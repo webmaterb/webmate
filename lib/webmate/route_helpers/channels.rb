@@ -19,10 +19,10 @@ module Webmate
         end
         channel.routes.each do |route|
           responder_block = lambda do
-            channel = request.path.gsub(/#{route[:action]}$/, '').gsub(/^\//, '')
-            request.params.merge!(action: route[:action], channel: channel)
+            channel_path = Webmate::Websockets.channel_from_path(request.path, route[:action])
+            request.params.merge!(action: route[:action], channel: channel_path)
             response = route[:responder].new(request).respond
-            response.status == 200 ? response.body : [response.status, {}, response.body]
+            response.status == 200 ? response.json : [response.status, {}, response.json]
           end
           send(route[:method], route[:route], {}, &responder_block)
         end
