@@ -34,11 +34,6 @@ require 'webmate/decorators/base'
 require 'webmate/route_helpers/channels'
 require 'webmate/views/helpers'
 
-module Responders; end;
-module Services; end;
-module Decorators; end;
-module Observers; end;
-
 require "#{Webmate.root}/config/config"
 
 configatron.app.load_paths.each do |path|
