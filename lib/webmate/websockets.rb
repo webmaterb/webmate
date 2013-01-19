@@ -6,7 +6,6 @@ module Webmate
       def subscribe(request, &block)
         channel = request.path.gsub(/^\//, '')
         init_connection
-        puts "Subscribed: #{channel}"
         subscriber.subscribe(channel)
         request.websocket do |ws|
           ws.onopen do
@@ -25,7 +24,6 @@ module Webmate
       end
 
       def publish(action, body)
-        puts "Published: #{action}"
         publisher.publish(action, body).errback { |e| puts(e) }
       end
 

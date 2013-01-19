@@ -34,7 +34,6 @@ module Webmate::Responders
 
     def process_action
       raise ActionNotFound unless respond_to?(action_method)
-      data = self.send(action_method)
       @response = Response.new(send(action_method), status: 200, params: params)
     end
 
