@@ -13,6 +13,7 @@ require "yajl"
 require 'webmate/env'
 require 'webmate/application'
 require 'webmate/config'
+require 'webmate/websockets'
 
 require 'bundler'
 Bundler.setup
@@ -23,7 +24,9 @@ end
 
 require 'webmate/support/sprockets'
 require 'webmate/responders/exceptions'
+require 'webmate/responders/abstract'
 require 'webmate/responders/base'
+require 'webmate/responders/response'
 require 'webmate/services/base'
 require 'webmate/observers/base'
 require 'webmate/decorators/base'
@@ -38,12 +41,17 @@ module Observers; end;
 require "#{WEBMATE_ROOT}/config/config"
 
 configatron.app.load_paths.each do |path|
-  Dir[ File.join( WEBMATE_ROOT, path, '/**/*.rb') ].each do |file|
+  Dir[ File.join( WEBMATE_ROOT, path, '**', '*.rb') ].each do |file|
     class_name = File.basename(file, '.rb')
     eval <<-EOV
       autoload :#{class_name.camelize}, "#{file}"
     EOV
   end
+end
+
+# run observers
+Dir[ File.join( WEBMATE_ROOT, 'app', 'observers', '**', '*.rb')].each do |file|
+  require file
 end
 
 class Webmate::Application
@@ -54,10 +62,6 @@ class Webmate::Application
   helpers Webmate::Views::Helpers
   helpers Sinatra::Cookies
   helpers Sinatra::Sprockets::Helpers
-
-  set :_websocket_channels, {}
-  set :_websocket_redis_publisher, Proc.new { @_websocket_redis_publisher ||= EM::Hiredis.connect }
-  set :_websocket_redis_subscriber, Proc.new { @_websocket_redis_subscriber ||= EM::Hiredis.connect }
 
   set :public_path, '/public'
   set :root, WEBMATE_ROOT

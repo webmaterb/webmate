@@ -29,6 +29,7 @@ class Webmate.Client
     data = {} if !data
     method = 'get' if !method
     data.action = action
+    data.channel = @channel
     data._client_id = @clientId
     if @websocket
       @websocket.send(JSON.stringify(data))

@@ -9,41 +9,20 @@ module Webmate
         get "/#{path}" do
           pass unless request.websocket?
 
-          websocket_publisher = settings._websocket_redis_publisher
-          websocket_subscriber = settings._websocket_redis_subscriber
-          websocket_subscriber.subscribe(request.path)
-          websocket_subscriber.on(:message){|channel, message|
-            settings._websocket_channels[channel].each{|s| s.send(message) }
-          }
-          request.websocket do |ws|
-            ws.onopen do
-              settings._websocket_channels[request.path] ||= []
-              settings._websocket_channels[request.path] << ws
-            end
-            ws.onmessage do |msg|
-              request.params.merge! Yajl::Parser.new(symbolize_keys: true).parse(msg)
-              response = RouterChannel.respond_to(path, request)
-              if response.first == 200
-                websocket_publisher.publish(request.path, response.last).errback { |e|
-                  puts(e)
-                }
-              end
-              puts "WebSocket #{path} #{request.params[:action]} #{response.first}"
-              puts "Params: #{request.params.inspect}"
-              puts ""
-            end
-            ws.onclose do
-              warn("websocket closed")
-              settings._websocket_channels[request.path].delete(ws)
-            end
+          Webmate::Websockets.subscribe(request) do |request|
+            response = RouterChannel.respond_to(path, request)
+            params = request.params
+            puts "WebSocket #{params[:channel]} #{params[:action]} #{response.status}"
+            puts "Params: #{params.inspect}"
+            puts ""
           end
         end
         channel.routes.each do |route|
           responder_block = lambda do
-            request.params.merge!(action: route[:action])
+            channel = request.path.gsub(/#{route[:action]}$/, '').gsub(/^\//, '')
+            request.params.merge!(action: route[:action], channel: channel)
             response = route[:responder].new(request).respond
-            status, body = *response
-            status == 200 ? body : [status, {}, body]
+            response.status == 200 ? response.body : [response.status, {}, response.body]
           end
           send(route[:method], route[:route], {}, &responder_block)
         end
