@@ -13,6 +13,10 @@ module Webmate::Responders
       action.split('/').last
     end
 
+    def params
+      @params.with_indifferent_access
+    end
+
     def respond
       process_action
     rescue Exception => e

@@ -1,4 +1,8 @@
 module Webmate
+  def self.root
+    WEBMATE_ROOT
+  end
+
   def self.env
     ENV["RACK_ENV"]
   end
