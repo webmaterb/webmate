@@ -24,6 +24,8 @@
   window.Backbone.sync = (method, model, options) ->
     type = methodMap[method]
     data = {}
+    if model and (method is "create")
+      data['_cid'] = model.cid
     if model and (method is "create" or method is "update" or method is 'patch')
       data[model.resourceName()] = (options.attrs || model.toJSON())
     if model and (method is "update" or method is 'patch')

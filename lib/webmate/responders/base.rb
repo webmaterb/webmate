@@ -44,7 +44,7 @@ module Webmate::Responders
 
     def wrap_response(response)
       Yajl::Encoder.new.encode(
-        action: action, response: response, client_id: params[:client_id]
+        action: action, response: response, params: params
       )
     end
 

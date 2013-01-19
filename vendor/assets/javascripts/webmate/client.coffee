@@ -11,7 +11,7 @@ class Webmate.Client
         data = JSON.parse(e.data)
         eventBinding = self.bindings[data.action]
         _.each eventBinding, (binding)->
-          binding(data.response, data.client_id)
+          binding(data.response, data.params)
       @websocket.onopen = (e)->
         callback()
     else
@@ -29,7 +29,7 @@ class Webmate.Client
     data = {} if !data
     method = 'get' if !method
     data.action = action
-    data.client_id = @clientId
+    data._client_id = @clientId
     if @websocket
       @websocket.send(JSON.stringify(data))
     else
@@ -44,12 +44,14 @@ class Webmate.Client
       collectionName = obj.collectionName()
       collectionInstance = App[collectionName]
       return unless collectionInstance
-      self.on "#{collectionName}/read", (response)->
+      self.on "#{collectionName}/read", (response, params)->
         collectionInstance.reset(response)
         collectionInstance.trigger "sync", collectionInstance, response
-      self.on "#{collectionName}/create", (response, clientId)->
-        unless self.clientId is clientId
+      self.on "#{collectionName}/create", (response, params)->
+        unless self.clientId is params._client_id
           collectionInstance.add(response)
+        if self.clientId is params._client_id
+          collectionInstance.get(params._cid).set(response)
 
 Webmate.connect = (channel, callback)->
   client = new Webmate.Client(channel, callback)
