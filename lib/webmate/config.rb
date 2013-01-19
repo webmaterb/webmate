@@ -11,6 +11,7 @@ Webmate::Application.configure do |config|
 
   config.assets.debug = false
   config.assets.compress = false
+  config.assets.compile = true
 
   config.cookies.key = Configatron::Delayed.new { "_#{configatron.app.name}_session" }
   config.cookies.domain = nil

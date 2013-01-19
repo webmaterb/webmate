@@ -64,7 +64,7 @@ class Webmate::Application
   helpers Sinatra::Cookies
   helpers Sinatra::Sprockets::Helpers
 
-  set :public_path, '/public'
+  set :public_path, "#{Webmate.root}/public"
   set :root, Webmate.root
   set :views, Proc.new { File.join(root, 'app', "views") }
   set :reloader, !configatron.app.cache_classes
