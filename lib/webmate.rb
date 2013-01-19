@@ -2,7 +2,6 @@ ENV["RACK_ENV"] ||= "development"
 
 require "sinatra"
 require "sinatra/cookies"
-require "sinatra/synchrony"
 require "sinatra/reloader"
 require "sinatra-websocket"
 require 'sinatra_more/markup_plugin'
@@ -21,7 +20,6 @@ if ENV["RACK_ENV"] == 'development'
   Bundler.require(:assets)
 end
 
-require 'webmate/support/thin'
 require 'webmate/support/sprockets'
 require 'webmate/responders/exceptions'
 require 'webmate/responders/base'
@@ -57,7 +55,6 @@ configatron.app.load_paths.each do |path|
 end
 
 class Webmate::Application
-  disable :threaded
   register Webmate::RouteHelpers::Channels
   register Sinatra::Reloader
   register SinatraMore::MarkupPlugin
