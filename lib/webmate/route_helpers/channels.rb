@@ -12,9 +12,9 @@ module Webmate
           Webmate::Websockets.subscribe(request) do |request|
             response = RouterChannel.respond_to(path, request)
             params = request.params
-            puts "WebSocket #{params[:channel]} #{params[:action]} #{response.status}"
-            puts "Params: #{params.inspect}"
-            puts ""
+            Webmate.logger.dump(
+              "WebSocket: #{params[:channel]}/#{params[:action]} #{response.status} \nParams: #{params.inspect}"
+            )
           end
         end
         channel.routes.each do |route|

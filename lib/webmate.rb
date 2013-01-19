@@ -14,11 +14,12 @@ require 'webmate/env'
 require 'webmate/application'
 require 'webmate/config'
 require 'webmate/websockets'
+require 'webmate/logger'
 
 require 'bundler'
 Bundler.setup
-Bundler.require(:default, ENV["RACK_ENV"].to_sym)
-if ENV["RACK_ENV"] == 'development'
+Bundler.require(:default, Webmate.env.to_sym)
+if Webmate.env == 'development'
   Bundler.require(:assets)
 end
 
@@ -38,10 +39,10 @@ module Services; end;
 module Decorators; end;
 module Observers; end;
 
-require "#{WEBMATE_ROOT}/config/config"
+require "#{Webmate.root}/config/config"
 
 configatron.app.load_paths.each do |path|
-  Dir[ File.join( WEBMATE_ROOT, path, '**', '*.rb') ].each do |file|
+  Dir[ File.join( Webmate.root, path, '**', '*.rb') ].each do |file|
     class_name = File.basename(file, '.rb')
     eval <<-EOV
       autoload :#{class_name.camelize}, "#{file}"
@@ -50,7 +51,7 @@ configatron.app.load_paths.each do |path|
 end
 
 # run observers
-Dir[ File.join( WEBMATE_ROOT, 'app', 'observers', '**', '*.rb')].each do |file|
+Dir[ File.join( Webmate.root, 'app', 'observers', '**', '*.rb')].each do |file|
   require file
 end
 
@@ -64,16 +65,24 @@ class Webmate::Application
   helpers Sinatra::Sprockets::Helpers
 
   set :public_path, '/public'
-  set :root, WEBMATE_ROOT
+  set :root, Webmate.root
   set :views, Proc.new { File.join(root, 'app', "views") }
   set :reloader, !configatron.app.cache_classes
 
   # auto-reloading dirs
-  also_reload("#{WEBMATE_ROOT}/config/config.rb")
-  also_reload("#{WEBMATE_ROOT}/config/application.rb")
+  also_reload("#{Webmate.root}/config/config.rb")
+  also_reload("#{Webmate.root}/config/application.rb")
   configatron.app.load_paths.each do |path|
-    also_reload("#{WEBMATE_ROOT}/#{path}/**/*.rb")
+    also_reload("#{Webmate.root}/#{path}/**/*.rb")
   end
+
+  use Webmate::Logger
+  use Rack::PostBodyContentTypeParser
+  use Rack::Session::Cookie, key: configatron.cookies.key,
+                           domain: configatron.cookies.domain,
+                           path: '/',
+                           expire_after: 14400,
+                           secret: configatron.cookies.secret
 end
 
 Sinatra::Sprockets.configure do |config|

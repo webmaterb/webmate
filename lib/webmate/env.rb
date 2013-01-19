@@ -10,4 +10,8 @@ module Webmate
   def self.env?(env)
     self.env == env.to_s
   end
+
+  def self.logger
+    @logger ||= Webmate::Logger.new
+  end
 end

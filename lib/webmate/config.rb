@@ -7,10 +7,10 @@ Webmate::Application.configure do |config|
   config.app.port = 80
   config.app.host_with_port = Configatron::Delayed.new { "#{configatron.app.host}:#{configatron.app.port}" }
 
+  config.logger.path = "#{Webmate.root}/log"
+
   config.assets.debug = false
   config.assets.compress = false
-
-  config.hello.world = "Hello World"
 
   config.cookies.key = Configatron::Delayed.new { "_#{configatron.app.name}_session" }
   config.cookies.domain = nil
