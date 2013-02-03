@@ -12,14 +12,6 @@ module Webmate
       def user_websocket_token_tag
         %Q{<meta content="#{user_websocket_token}" name="websocket-token" />}
       end
-
-      def javascript_include_tag(name)
-        %Q{<script type="text/javascript" src="#{asset_path(name)}" ></script>}
-      end
-
-      def stylesheet_link_tag(name)
-        %Q{<link rel="stylesheet" type="text/css" href="#{asset_path(name)}" />}
-      end
     end
   end
 end

@@ -89,6 +89,8 @@ Sinatra::Sprockets.configure do |config|
   config.precompile = [ /\w+\.(?!js|css).+/, /application.(css|js)/ ]
   config.compress = configatron.assets.compress
   config.debug = configatron.assets.debug
+  config.compile = configatron.assets.compile
+  config.digest = configatron.assets.digest
 end
 
 path = File.expand_path("#{WEBMATE_ROOT}/config/initializers/*.rb")
