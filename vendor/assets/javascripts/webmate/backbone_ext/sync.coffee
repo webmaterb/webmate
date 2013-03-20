@@ -3,6 +3,7 @@
   methodMap =
     create: "POST"
     update: "PUT"
+    patch: 'PATCH'
     delete: "DELETE"
     read: "GET"
 
@@ -37,6 +38,8 @@
       data.user_websocket_token = token
       client = Webmate.channels[getChannel(model)]
       client.send("#{model.collectionName()}/#{method}", data, type)
+
+      model.trigger "request", model
     else
       params =
         type: type
