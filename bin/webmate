@@ -1,19 +1,72 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
-command = ARGV.shift
 
+require 'optparse'
+require 'ostruct'
+
+puts ARGV.inspect
+
+options = OpenStruct.new(
+  port: 3000,
+  environment: 'development',
+  daemon: false,
+  rackup: 'config.ru'
+)
+
+opt_parser = OptionParser.new do |opt|
+  opt.banner = "Usage: webmate COMMAND [OPTIONS]"
+  opt.separator  ""
+  opt.separator  "Commands"
+  opt.separator  "     server: start server"
+  opt.separator  "     console [environment]: application console"
+  opt.separator  "     generate [app_name]: do something useful"
+  opt.separator  ""
+  opt.separator  "Options"
+
+  opt.on("-e","--environment ENVIRONMENT","which environment you want to run") do |environment|
+    options.environment = environment
+  end
+
+  opt.on("-d","--daemon","daemon mode") do |daemon|
+    options.daemon = daemon
+  end
+
+  opt.on("-p","--port PORT", Integer, "port number") do |port|
+    options.port = port
+  end
+
+  opt.on("-R","--rackup FILE", "rackup file") do |file|
+    options.rackup_file = file
+  end
+end
+
+opt_parser.parse!
+
+command = ARGV.shift
 case command
-when "server"
+when 'server'
+  #TODO refactor to
+  # require 'lib/commands/server'
+  # with options
   require './config/environment'
   require 'thin'
-  Thin::Runner.new(["start"]).run!
-when "console"
+
+  cmd = ["start"]
+  cmd += ["-p", options.port.to_s]
+
+  Thin::Runner.new(cmd).run!
+when 'console'
   require 'irb'
-  ENV["RACK_ENV"] ||= ARGV.first || 'development'
+  ENV["RACK_ENV"] ||= ARGV.first || options.environment || 'development'
   puts "Running Webmate console with env: #{ENV["RACK_ENV"]}"
   require './config/environment'
   ARGV.clear
   IRB.start
+
+when 'generate'
+  puts 'not yet implemented'
+  puts opt_parser
+
 else
-  puts "Don't know how to process command: #{command}"
+  puts opt_parser
 end
