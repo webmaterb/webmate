@@ -2,6 +2,16 @@
 
 TODO: Write a gem description
 
+## Prerequisites
+  git
+  mongo
+  redis
+
+  sinatra 4.2
+  to make this, use sinatra-contrib at least 1.4.0 version
+    Specify in your Gemfile 
+      gem 'sinatra-contrib', git: 'git://github.com/sinatra/sinatra-contrib.git'
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -19,6 +29,14 @@ Or install it yourself as:
 ## Usage
 
 TODO: Write usage instructions here
+
+start server as 
+  webmate server [-p port]
+
+running interactive console
+  webmate console [environment]
+  or 
+  webmate console [-e environment]
 
 ## Contributing
 
