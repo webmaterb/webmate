@@ -3,28 +3,30 @@ module Webmate
     class_attribute :channels
     class << self
 
-      def subscribe(request, &block)
-        channel = channel_from_path(request.path)
+      def subscribe(channel_name, request, &block)
         init_connection
-        subscriber.subscribe(channel)
-        request.websocket do |ws|
-          ws.onopen do
-            channels[channel] ||= []
-            channels[channel] << ws
+        subscriber.subscribe(channel_name)
+        request.websocket do |websocket|
+          websocket.onopen do
+            channels[channel_name] ||= []
+            channels[channel_name] << websocket
+            websocket.send(Webmate::SocketIO::Packets::Connect.new.to_packet)
+            warn("Socket opened and added to channel '#{channel_name}'")
           end
-          ws.onmessage do |msg|
-            request.params.merge! Yajl::Parser.new(symbolize_keys: true).parse(msg)
-            block.call(request)
+          websocket.onmessage do |message|
+            block.call(Webmate::SocketIO::Packets::Base.from_packet(message))
+            warn("Socket on channel '#{channel_name}' received a message: " + message.inspect)
           end
-          ws.onclose do
-            warn("websocket closed")
-            channels[channel].delete(ws)
+          websocket.onclose do
+            channels[channel_name].delete(websocket)
+            warn("Socket closed and removed from channel '#{channel_name}'")
           end
         end
       end
 
-      def publish(action, body)
-        publisher.publish(action, body).errback { |e| puts(e) }
+      # channel_name, response
+      def publish(channel_name, response)
+        publisher.publish(channel_name, response).errback { |e| puts(e); raise e.inspect }
       end
 
       def subscriber
@@ -44,11 +46,18 @@ module Webmate
         @initialized_connection = true
       end
 
-      def channel_from_path(path, action = nil)
-        channel = path.gsub(/^\//, '').gsub(/\/$/, '')
-        channel = channel.gsub(/#{action}$/, '') if action
-        channel.gsub(/\/$/, '')
-      end
+#      def channel_from_path(path, action = nil)
+#        # cleanup
+#        channel = path.gsub(/^\//, '').gsub(/\/$/, '')
+#        channel = channel.gsub(/#{action}$/, '') if action
+#        channel.gsub!(/\/$/, '')
+#
+#        # according to socket.io,
+#        # we have following path
+#        # /resource_name/version/transport/session_id
+#        channel_name, version, transport, session_id = channel.split('/')
+#        channel_name
+#      end
     end
   end
 end

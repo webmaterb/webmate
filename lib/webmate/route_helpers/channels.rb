@@ -1,5 +1,87 @@
 require 'yajl'
 require 'em-hiredis'
+
+module Webmate
+  module RouteHelpers
+    module Channels
+      def channel(channel_name, options = {}, &block)
+        # use options to specify socket opening behaviour.
+        channel = RouterChannel.new(channel_name)
+        channel.define_routes(&block)
+        
+        # handshake
+        get "/#{channel_name}/1/?\?:query?" do
+          Webmate.logger.dump("WebSocket Handshake request: #{params.inspect}")
+          response = Webmate::SocketIO::Actions::Handshake.new({}).respond
+          response
+        end
+
+        get "/#{channel_name}/:protocol_version/:transport/:session_id?disconnect" do
+          # forced connection closing
+        end
+
+        get "/#{channel_name}/:protocol_version/:transport/:session_id/?\?:query?" do
+          pass if !request.websocket?
+
+          # subscribe to response on message
+          Webmate::Websockets.subscribe(channel_name, request) do |message|
+            # TODO test memory consume with smt like RouterChannel.channels[channel_name]?
+            response = channel.respond_to(message, request)
+=begin
+            warn("responded with: #{response.json}")
+            packet = Webmate::SocketIO::Packets::Message.new(response).to_packet
+
+            # broadcast message to all clients?
+            Webmate::Websockets.channels[channel_name].each do |socket|
+              socket.send(packet)
+            end
+=end
+          end
+        end
+      end
+
+      class RouterChannel
+        #cattr_accessor :channels
+
+        attr_accessor :routes
+        attr_accessor :channel_name
+
+        def initialize(channel_name)
+          #self.class.channels ||= {}
+          #self.class.channels[channel_name] ||= {}
+          @channel_name = channel_name
+          @routes = {}
+        end
+
+        def define_routes(&block)
+          instance_eval(&block)
+        end
+
+        # define resource messages
+        def resources(name, options = {})
+          all_available_actions = %w{read update delete create get}
+          options[:actions] = options[:only].present? ? options[:only].map(&:to_s) : all_available_actions
+          options[:responder] ||= "#{name.to_s}Responder".classify.constantize
+
+          @routes[name.to_s] = options
+        end
+
+        def respond_to(packet, request)
+          resource = @routes[packet.packet_data[:resource]] 
+          if resource && resource[:actions].include?(packet.packet_data[:action])
+            #resource[:responder].new(request).send(packet.packet_data[:action]) 
+            # crutch
+            request.params.merge!(action: packet.packet_data[:action], channel: @channel_name)
+            resource[:responder].new(request).respond
+          else
+            Webmate::Responders::Base.new(request).render_not_found
+          end
+        end
+      end
+    end
+  end
+end
+=begin
 module Webmate
   module RouteHelpers
     module Channels
@@ -76,3 +158,4 @@ module Webmate
     end
   end
 end
+=end
