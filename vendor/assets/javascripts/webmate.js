@@ -2,6 +2,7 @@
 //= require webmate/libs/backbone
 //= require webmate/libs/icanhaz
 //= require webmate/libs/benchmark
+//= require webmate/libs/socket.io
 //= require webmate/init
 //= require webmate/client
 //= require webmate/backbone_ext/sync
