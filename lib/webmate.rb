@@ -34,6 +34,17 @@ require 'webmate/decorators/base'
 require 'webmate/route_helpers/channels'
 require 'webmate/views/helpers'
 
+require 'webmate/socket.io/actions/handshake'
+require 'webmate/socket.io/packets/base'
+require 'webmate/socket.io/packets/disconnect'
+require 'webmate/socket.io/packets/heartbeat'
+require 'webmate/socket.io/packets/message'
+require 'webmate/socket.io/packets/json'
+require 'webmate/socket.io/packets/event'
+require 'webmate/socket.io/packets/ack'
+require 'webmate/socket.io/packets/error'
+require 'webmate/socket.io/packets/noop'
+
 require "#{Webmate.root}/config/config"
 
 configatron.app.load_paths.each do |path|

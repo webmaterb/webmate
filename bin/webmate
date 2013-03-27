@@ -4,8 +4,6 @@
 require 'optparse'
 require 'ostruct'
 
-puts ARGV.inspect
-
 options = OpenStruct.new(
   port: 3000,
   environment: 'development',
