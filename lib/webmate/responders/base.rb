@@ -5,8 +5,9 @@ module Webmate::Responders
     after_filter :_send_websocket_events
 
     def _send_websocket_events
+      packet = Webmate::SocketIO::Packets::Message.new(response.data)
       async do
-        Webmate::Websockets.publish(params[:channel], response.json)
+        Webmate::Websockets.publish(params[:channel], packet.to_packet)
       end
     end
 
