@@ -864,6 +864,7 @@
     // collection immediately, unless `wait: true` is passed, in which case we
     // wait for the server to agree.
     create: function(model, options) {
+      console.log('collection create')
       options = options ? _.clone(options) : {};
       if (!(model = this._prepareModel(model, options))) return false;
       if (!options.wait) this.add(model, options);
