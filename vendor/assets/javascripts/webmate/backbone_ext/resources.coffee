@@ -24,7 +24,16 @@ Backbone.Collection::bindSocketEvents = () ->
     model.trigger "sync", model, response
 
   client.on "#{@collectionName()}/create", (response, params)->
-    if clientId is params._client_id
-      model.add(response)
-    else
-      model.get(params._cid).set(response)
+    model.add(response)
+    #model.get(response._id).trigger 'sync', response
+    #if clientId is params._client_id
+    #  model.add(response)
+    #else
+    #  model.get(params._cid).set(response)
+
+# update existing functions
+
+Backbone.Collection::_prepareModelWithoutAssociations = Backbone.Collection::_prepareModel
+Backbone.Collection::_prepareModel = (attrs, options) ->
+  attrs = _.extend(attrs, @sync_data) if @sync_data
+  @._prepareModelWithoutAssociations(attrs, options)

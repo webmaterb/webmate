@@ -20,15 +20,15 @@ class Webmate.Client
 
   createConnection: (onMessageHandler) ->
     self = @
+    @clientId or= Math.random().toString(36).substr(2)
 
     socket = new io.Socket
       resource: @channel_name
       host: location.hostname
       port: Webmate.websocketsPort or location.port
 
-    socket.on "connect", (data) ->
+    socket.on "connect", () ->
       console.log("connection established")
-      console.log(data)
 
     socket.onPacket = (packet) ->
       return unless packet.type is 'message'
@@ -46,6 +46,7 @@ class Webmate.Client
   send: (path, data, method) ->
     data.resource = path.split('/')[0]
     data.action   = path.split('/')[1]
+    data._client_id = @clientId
 
     if @useWebsockets()
       @websocket.packet({ type: 'message', data: JSON.stringify(data)})

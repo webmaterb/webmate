@@ -33,12 +33,14 @@
       delete data[model.resourceName()][model.idAttribute]
     if model and (method is "delete" or method is "update" or method is 'patch')
       data[model.idAttribute] = model.id
+
     if window.WebSocket
+      if model and model.sync_data
+        data = _.extend(data, model.sync_data)
       token = $('meta[name="websocket-token"]').attr('content')
       data.user_websocket_token = token
       client = Webmate.channels[getChannel(model)]
       client.send("#{model.collectionName()}/#{method}", data, type)
-
       model.trigger "request", model
     else
       params =

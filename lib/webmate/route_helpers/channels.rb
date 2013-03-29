@@ -71,11 +71,9 @@ module Webmate
           if resource && resource[:actions].include?(packet.packet_data[:action])
             #resource[:responder].new(request).send(packet.packet_data[:action]) 
             # crutch
-            request.params.merge!(
-              resource: packet.packet_data[:resource],
-              action: packet.packet_data[:action],
-              channel: @channel_name
-            )
+            request.params.merge!(packet.packet_data)
+            request.params[:channel] = @channel_name
+
             resource[:responder].new(request).respond
           else
             Webmate::Responders::Base.new(request).render_not_found
