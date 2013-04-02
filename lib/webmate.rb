@@ -32,6 +32,8 @@ require 'webmate/services/base'
 require 'webmate/observers/base'
 require 'webmate/decorators/base'
 require 'webmate/route_helpers/channels'
+require 'webmate/route_helpers/routes_collection'
+require 'webmate/route_helpers/route'
 require 'webmate/views/helpers'
 
 require 'webmate/socket.io/actions/handshake'
