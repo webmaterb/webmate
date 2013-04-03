@@ -13,6 +13,11 @@ module Webmate
       instance_eval(&block)
     end
 
+    def get_routes(method, transport)
+      @routes[method] ||= {}
+      @routes[method][transport] || []
+    end
+
     private
 
     # we store routes in following structure
@@ -21,9 +26,9 @@ module Webmate
     # route - valid object of Webmate::Route class
     def add_route(route)
       # add route to specific node of routes hash
-      @routes[route.method] ||= {}
+      @routes[route.method.to_s.upcase] ||= {}
       route.transport.each do |transport|
-        (@routes[route.method][transport] ||= []).push(route)
+        (@routes[route.method.to_s.upcase][transport.to_s.upcase] ||= []).push(route)
       end
     end
 
@@ -126,9 +131,6 @@ module Webmate
         prefix << "/#{scope[:resource]}"
         prefix << "/:#{scope[:resource_id]}" unless scope[:collection]
       end
-
-      puts "path_prefix for #{@resource_scope.inspect}"
-      puts "is: #{prefix}"
       prefix
     end
 
