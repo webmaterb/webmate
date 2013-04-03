@@ -35,16 +35,14 @@ module Webmate
     #       get 'read_formatted'
     %w[get post put delete patch].each do |method_name|
       define_method method_name.to_sym do |path, options = {}|
+        route_options = process_options(options)
+
         # process case inside resources/collection or resources/member block
-        if options.blank? && @resource_scope.present?
-          route_options = {
-            responder: get_responder_from_scope,
-            action: path,
-            path: "#{path_prefix}/#{path}",
-            transport: normalized_transport_option(nil)
-          }
+        if is_member_scope? or is_collection_scope?
+          route_options[:responder] ||= get_responder_from_scope
+          route_options[:action] ||= path
+          route_options[:path] ||= "#{path_prefix}/#{path}"
         else
-          route_options = process_options(options)
           route_options[:path] = path || '/'
         end
         route_options[:method] = method_name.to_sym
@@ -158,7 +156,10 @@ module Webmate
     #   prefix /resource_name/resource_id
     def member(&block)
       return if @resource_scope.blank?
+      @resource_scope.last[:member] = true
       yield block
+    ensure
+      @resource_scope.last[:member] = false
     end
 
     # prefix /resource_name
@@ -169,6 +170,21 @@ module Webmate
     ensure
       @resource_scope.last[:collection] = false
     end
+
+    # track definition inside collection block
+    # collection do
+    #   path 'code', options
+    def is_collection_scope?
+      @resource_scope.present? && @resource_scope.last[:collection]
+    end
+
+    # track definition inside member block
+    # collection do
+    #   path 'code', options
+    def is_member_scope?
+      @resource_scope.present? && @resource_scope.last[:member]
+    end
+
 
     # helper methods
     # normalize_transport_option 
