@@ -20,7 +20,7 @@ module Webmate
             @settings.closing_timeout,
             @settings.transports.join(',')
           ]
-          [200, {}, body.join(':')]
+          OpenStruct.new(status: 200, headers: {}, data: body.join(':'))
         end
 
         private

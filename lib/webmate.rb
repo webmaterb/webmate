@@ -37,6 +37,7 @@ require 'webmate/route_helpers/route'
 require 'webmate/views/helpers'
 
 require 'webmate/socket.io/actions/handshake'
+require 'webmate/socket.io/actions/connection'
 require 'webmate/socket.io/packets/base'
 require 'webmate/socket.io/packets/disconnect'
 require 'webmate/socket.io/packets/connect'

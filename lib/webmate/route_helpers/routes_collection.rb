@@ -7,10 +7,26 @@ module Webmate
     def initialize
       @routes = {}
       @resource_scope = []
+      
+      enable_websockets_support
     end
 
     def define_routes(&block)
       instance_eval(&block)
+    end
+
+    # get info about matched route
+    #   method    - GET/POST/PUT/PATCH/DELETE
+    #   transport - HTTP / WS [ HTTPS / WSS ]
+    #   path      - /projects/123/tasks
+    #
+    def match(method, transport, path)
+      routes = get_routes(method, transport)
+      routes.each do |route|
+        if info = route.match(path)
+          return info
+        end
+      end
     end
 
     def get_routes(method, transport)
@@ -19,6 +35,28 @@ module Webmate
     end
 
     private
+
+    # if websockets enabled, we should add specific http routes
+    #   - for handshake          [ get session id ]
+    #   - for connection opening [ switch protocol from http to ws ]
+    def enable_websockets_support
+      namespace = configatron.websockets.namespace || 'api'
+      route_options = { method: 'GET', transport: ['HTTP'], action: 'websocket' }
+
+      # handshake
+      add_route(Webmate::Route.new(route_options.merge(
+        transport: ["HTTP"],
+        path: "/#{namespace}/:version_id",
+        responder: Webmate::SocketIO::Actions::Handshake,
+      )))
+
+      # transport connection
+      add_route(Webmate::Route.new(route_options.merge(
+        transport: ["WS"],
+        path: "/#{namespace}/:version_id/websocket/:session_id",
+        responder: Webmate::SocketIO::Actions::Connection,
+      )))
+    end
 
     # we store routes in following structure
     # { method:

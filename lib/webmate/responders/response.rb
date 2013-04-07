@@ -7,7 +7,7 @@ module Webmate::Responders
       @status = options[:status] || 200
       @params = options[:params] || {}
       @action = options[:action] || @params[:action] || ''
-      @resource = @params[:resource]
+      #@resource = @params[:resource]
     end
 
     def json

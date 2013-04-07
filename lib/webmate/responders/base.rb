@@ -5,7 +5,7 @@ module Webmate::Responders
     after_filter :_send_websocket_events
 
     def _send_websocket_events
-      packet = Webmate::SocketIO::Packets::Message.new(response.packed)
+      packet = Webmate::SocketIO::Packets::Message.new(@response.packed)
 
       async do
         Webmate::Websockets.publish(params[:channel], packet.to_packet)
@@ -14,7 +14,7 @@ module Webmate::Responders
 
     def _run_observer_callbacks
       async do
-        Webmate::Observers::Base.execute_all(action, response)
+        Webmate::Observers::Base.execute_all(action, @response)
       end
     end
   end

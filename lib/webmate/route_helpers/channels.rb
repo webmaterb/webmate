@@ -23,10 +23,16 @@ module Webmate
         get "/#{channel_name}/:protocol_version/:transport/:session_id/?\?:query?" do
           pass if !request.websocket?
 
+          current_user = nil
+
           # subscribe to response on message
           Webmate::Websockets.subscribe(channel_name, request) do |message|
             # TODO test memory consume with smt like RouterChannel.channels[channel_name]?
             response = channel.respond_to(message, request)
+
+            # [opened_sockets || users].each do |user|
+            #  response.channel.respond_to(message, request, current_user)
+            # end
 =begin
             warn("responded with: #{response.json}")
             packet = Webmate::SocketIO::Packets::Message.new(response).to_packet
@@ -41,14 +47,10 @@ module Webmate
       end
 
       class RouterChannel
-        #cattr_accessor :channels
-
         attr_accessor :routes
         attr_accessor :channel_name
 
         def initialize(channel_name)
-          #self.class.channels ||= {}
-          #self.class.channels[channel_name] ||= {}
           @channel_name = channel_name
           @routes = {}
         end
@@ -59,11 +61,36 @@ module Webmate
 
         # define resource messages
         def resources(name, options = {})
-          all_available_actions = %w{read update delete create get}
-          options[:actions] = options[:only].present? ? options[:only].map(&:to_s) : all_available_actions
+          all_available_actions = %w{read update delete create}
+
+          options[:actions] = if options[:only].present?
+            options.delete(:only).map(&:to_s) & all_available_actions
+          else
+            all_available_actions
+          end
           options[:responder] ||= "#{name.to_s}Responder".classify.constantize
 
           @routes[name.to_s] = options
+          add_http_transport(name, options)
+        end
+
+        def add_http_transport(name, options)
+          methods = { 
+            'read' => 'get',
+            'create' => 'post',
+            'update' => 'update',
+            'delete' => 'delete'
+          }
+
+          options[:actions].each do |action|
+            send methods[action].to_sym, "#/{@channel_name}/#{name}/#{action}" do 
+              request.params.merge!(
+                channel: @channel_name,
+                action: action
+              )
+              options[:responder].new(request).respond
+            end
+          end
         end
 
         def respond_to(packet, request)
@@ -74,6 +101,7 @@ module Webmate
             request.params.merge!(packet.packet_data)
             request.params[:channel] = @channel_name
 
+            # this should check current users rights
             resource[:responder].new(request).respond
           else
             Webmate::Responders::Base.new(request).render_not_found
