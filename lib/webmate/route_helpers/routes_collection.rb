@@ -27,6 +27,7 @@ module Webmate
           return info
         end
       end
+      nil
     end
 
     def get_routes(method, transport)

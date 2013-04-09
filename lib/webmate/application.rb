@@ -29,7 +29,7 @@ module Webmate
           request_info = params_for_responder(route_info)
           response = route_info[:responder].new(request_info).respond
 
-          return response
+          return [response.status, {}, response.data]
         end
       end
 
@@ -54,7 +54,7 @@ module Webmate
     def params_for_responder(route_info)
       # create unified request info 
       # request_info = { path: '/', metadata: {}, action: 'index', params: { test: true } }
-      request_params = @request.params.dup
+      request_params = parsed_request_params
       metadata = request_params.delete(:metadata)
       {
         path: @request.path,
@@ -62,6 +62,20 @@ module Webmate
         action: route_info[:action],
         params: request_params.merge(route_info[:params])
       }
+    end
+
+    # @request.params  working only for get params
+    # and params in url line ?key=value
+    # but this not work for post/put body params
+    # issue related to parse
+    def parsed_request_params
+      request_params = HashWithIndifferentAccess.new
+      request_params.merge!(@request.params || {})
+      #body_params = Yajl::Parser.new.parse(@request.body)
+      #request_params.merge!(model: body_params) if body_params.present?
+      request_params.merge!(Yajl::Parser.new.parse(@request.body) || {})
+
+      request_params
     end
 
     class << self

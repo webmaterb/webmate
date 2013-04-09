@@ -1,13 +1,12 @@
 require 'webmate/responders/abstract'
 module Webmate::Responders
   class Response
-    attr_accessor :data, :status, :params, :action, :resource
+    attr_accessor :data, :status, :params, :action
     def initialize(data, options = {})
       @data = data
       @status = options[:status] || 200
       @params = options[:params] || {}
       @action = options[:action] || @params[:action] || ''
-      #@resource = @params[:resource]
     end
 
     def json
