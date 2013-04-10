@@ -6,14 +6,13 @@ class Webmate.Client
 
     if @useWebsockets()
       @websocket = @createConnection( (message) ->
-        #console.log("message successfully received")
-        console.log(message)
-        eventBindings = @bindings["#{message.resource}/#{message.action}"]
-        _.each eventBindings, (binding)->
-          binding(message.response, message.params)
+        console.log('place for fire')
+        metadata = message.request.metadata
+        eventBindings = @bindings["#{metadata.collection_url}/#{metadata.method}"]
+        
+        _.each eventBindings, (eventBinding) ->
+          eventBinding(message.response.body, message.request.metadata)
       )
-    #else
-    #   handle case when we don't have sockets.. stop. we should use socket.io anyway
   
   useWebsockets: ->
     window.Webmate.websocketsEnabled isnt false && io && io.Socket
@@ -31,9 +30,10 @@ class Webmate.Client
       console.log("connection established")
 
     socket.onPacket = (packet) ->
+      console.log(packet)
       return unless packet.type is 'message'
-      data = JSON.parse(packet.data)
-      onMessageHandler.call(self, data)
+      parsed_packet = Webmate.Client::parsePacketData(packet.data)
+      onMessageHandler.call(self, parsed_packet)
 
     socket.connect()
     socket
@@ -44,15 +44,18 @@ class Webmate.Client
     @
 
   send: (path, data, method) ->
-    data.resource = path.split('/')[0]
-    data.action   = path.split('/')[1]
-    data._client_id = @clientId
+    data.path = path
+    data.method = method
+    packet = {
+      type: 'message',
+      data: JSON.stringify(data)
+    }
+    @websocket.packet(packet)
 
-    if @useWebsockets()
-      @websocket.packet({ type: 'message', data: JSON.stringify(data)})
-    else
-      # write here something, please
-      #$.ajax("http://#{@fullPath}/#{action}", type: method).success (data) ->
+Webmate.Client::parsePacketData = (packet_data) ->
+  data = JSON.parse(packet_data)
+  data.response.body = JSON.parse(data.response.body)
+  data
 
 Webmate.connect = (channel, callback)->
   client = new Webmate.Client(channel, callback)

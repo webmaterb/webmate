@@ -7,9 +7,9 @@ module Webmate::Responders
     def _send_websocket_events
       packet = Webmate::SocketIO::Packets::Message.new(@response.packed)
 
-      async do
-        Webmate::Websockets.publish(params[:channel], packet.to_packet)
-      end
+      #async do
+      #  #Webmate::Websockets.publish(params[:channel], packet.to_packet)
+      #end
     end
 
     def _run_observer_callbacks

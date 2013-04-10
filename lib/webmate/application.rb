@@ -7,15 +7,22 @@ module Webmate
       if route_info = base.routes.match(@request.request_method, transport, @request.path)
         if @request.websocket?
           channel_name = "user-channel-#{Time.now.to_i}"
-          Webmate::Websockets.subscribe(channel_name, @request) do |message|
-            if route_info = base.routes.match(message.method, 'WS', message.path)
+          session_id = route_info[:params][:session_id].inspect
+          Webmate::Websockets.subscribe(session_id, @request) do |message|
+            if route_info = base.routes.match(message['method'], 'WS', message.path)
               request_info = {
                 path: message.path,
                 metadata: message.metadata || {},
                 action: route_info[:action],
                 params: message.params.merge(route_info[:params])
               }
-              route_info[:responder].new(request_info).respond
+
+              # here we should create subscriber who can live
+              # between messages.. but not between requests.
+              response = route_info[:responder].new(request_info).respond
+
+              # result of block will be sent back to user
+              response
             end
           end
 
@@ -71,9 +78,7 @@ module Webmate
     def parsed_request_params
       request_params = HashWithIndifferentAccess.new
       request_params.merge!(@request.params || {})
-      #body_params = Yajl::Parser.new.parse(@request.body)
-      #request_params.merge!(model: body_params) if body_params.present?
-      request_params.merge!(Yajl::Parser.new.parse(@request.body) || {})
+      request_params.merge!(Rack::Utils.parse_nested_query(@request.body.read) || {})
 
       request_params
     end

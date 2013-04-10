@@ -1,29 +1,29 @@
 module Webmate
   class Websockets
-    class_attribute :channels
     class << self
 
-      def subscribe(channel_name, request, &block)
-        init_connection
-        subscriber.subscribe(channel_name)
+      def subscribe(session_id, request, &block)
+        #init_connection
+        #subscriber.subscribe(channel_name)
         request.websocket do |websocket|
           websocket.onopen do
-            channels[channel_name] ||= []
-            channels[channel_name] << websocket
             websocket.send(Webmate::SocketIO::Packets::Connect.new.to_packet)
-            warn("Socket opened and added to channel '#{channel_name}'")
+            warn("Socket connection opened for session_id: #{session_id}")
           end
           websocket.onmessage do |message|
-            block.call(Webmate::SocketIO::Packets::Base.from_packet(message))
-            warn("Socket on channel '#{channel_name}' received a message: " + message.inspect)
+            response = block.call(Webmate::SocketIO::Packets::Base.parse(message))
+            #warn("socket for '#{session_id}' \n received: #{message.inspect} and \n sent back a '#{response.inspect}")
+
+            packet = Webmate::SocketIO::Packets::Message.build_response_packet(response)
+            websocket.send(packet.to_packet)
           end
           websocket.onclose do
-            channels[channel_name].delete(websocket)
-            warn("Socket closed and removed from channel '#{channel_name}'")
+            #channels[channel_name].delete(websocket)
+            warn("Socket connection closed '#{session_id}'")
           end
         end
       end
-
+=begin
       # channel_name, response
       def publish(channel_name, response)
         publisher.publish(channel_name, response).errback { |e| puts(e); raise e.inspect }
@@ -38,13 +38,11 @@ module Webmate
       end
 
       def init_connection
-        return if @initialized_connection
-        subscriber.on(:message){|channel, message|
-          channels[channel].each{|s| s.send(message) }
-        }
-        self.channels ||= {}
-        @initialized_connection = true
+        subscriber.on(:message) do |channel, message|
+          puts "channel: '#{channel}' received message: #{message.inspect}"
+        end
       end
+=end
 
 #      def channel_from_path(path, action = nil)
 #        # cleanup
