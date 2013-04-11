@@ -8,7 +8,7 @@ module Webmate
         if @request.websocket?
           channel_name = "user-channel-#{Time.now.to_i}"
           session_id = route_info[:params][:session_id].inspect
-          Webmate::Websockets.subscribe(session_id, @request) do |message|
+          Webmate::Websockets.subscribe(session_id, @request) do |message, event_bus|
             if route_info = base.routes.match(message['method'], 'WS', message.path)
               request_info = {
                 path: message.path,
@@ -16,10 +16,9 @@ module Webmate
                 action: route_info[:action],
                 params: message.params.merge(route_info[:params])
               }
-
               # here we should create subscriber who can live
               # between messages.. but not between requests.
-              response = route_info[:responder].new(request_info).respond
+              response = route_info[:responder].new(request_info, event_bus).respond
 
               # result of block will be sent back to user
               response

@@ -61,6 +61,10 @@ module Webmate
         # convert response from Responders::Base to socket io message
         # 
         def self.build_response_packet(response)
+          new(self.prepare_packet_data(response))
+        end
+
+        def self.prepare_packet_data(response)
           packet_data = {
             action:   response.action,
             body:     response.data,
@@ -68,9 +72,6 @@ module Webmate
             params:   response.params,
             metadata: response.metadata
           }
-          message = new(packet_data)
-
-          message
         end
 
         # socket io spec
