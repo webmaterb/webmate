@@ -4,19 +4,13 @@ module Webmate::Responders
     attr_accessor :action, :path, :metadata, :params
 
     # request info - current request params
-    #
-    # event_bus - redis connection, 
-    #   which persists between requests
-    #   and should be single for each websocket transport connection
-    #   but can be short-lived for http request [ create - fire - forgot ]
-    def initialize(request_info, event_bus = nil)
+    def initialize(request_info)
       @action = request_info[:action]
       @path   = request_info[:path]
       @metadata = request_info[:metadata]
       @params  = request_info[:params]
 
-      # redis client
-      @event_bus = event_bus
+      # publishing actions
       @publish_queue = []
 
       @response = nil
@@ -92,27 +86,24 @@ module Webmate::Responders
       "mock for non EM redis connectiion"
     end
 
-    # subscribe_to "project/#{project.id}/tasks"
-    def subscribe_to(channel_name)
-      return unless event_bus.present?
-      event_bus.subscribe(channel_name)
-    end
-
-    # publish_to("project/#{project.id}/tasks", "create", response, to: [],
-    def publish_to(channel_name, options)
-      @publish_queue << [channel_name, options]
+    # publish current response to private channels
+    # for users in user_ids
+    #
+    # publish_to(123, 456)
+    def publish_to(*user_ids)
+      @publish_queue += user_ids
     end
 
     def publish(response)
       connection = build_connection
-      @publish_queue.each do |channel_name, options|
-        # this should be prepared data to create socket.io message without
-        # any additional checks
-        data = {
-          response: Webmate::SocketIO::Packets::Message.prepare_packet_data(response),
-          options: options
-        }
-        connection.publish(channel_name, YAML::dump(data))
+      # prepare args for socket.io message packet
+      # this should be prepared data to create socket.io message
+      # without any additional actions
+      packet = Webmate::SocketIO::Packets::Message.prepare_packet_data(response)
+      data = YAML::dump(packet)
+      @publish_queue.each do |user_id|
+        channel_name = Webmate::Application.get_channel_name_for(user_id)
+        connection.publish(channel_name, data)
       end
     end
   end

@@ -2,9 +2,11 @@ module Webmate
   class Websockets
     class << self
       def subscribe(session_id, request, &block)
+        user_id = 1 # get user from session id ?
 
         request.websocket do |websocket|
-          redis_event_bus = init_subscriber(websocket, session_id)
+          # subscribe user to redis channel
+          subscribe_to_personal_channel(user_id, websocket)
 
           websocket.onopen do
             websocket.send(Webmate::SocketIO::Packets::Connect.new.to_packet)
@@ -12,7 +14,7 @@ module Webmate
           end
 
           websocket.onmessage do |message|
-            response = block.call(Webmate::SocketIO::Packets::Base.parse(message), redis_event_bus)
+            response = block.call(Webmate::SocketIO::Packets::Base.parse(message))
             #warn("socket for '#{session_id}' \n received: #{message.inspect} and \n sent back a '#{response.inspect}")
 
             packet = Webmate::SocketIO::Packets::Message.build_response_packet(response)
@@ -26,25 +28,16 @@ module Webmate
         end
       end
 
-      # websocket - used for sending messages
-      # user_credentials - used for identify current user rights
-      def init_subscriber(websocket, user_credentials)
+      def subscribe_to_personal_channel(user_id, websocket)
+        channel_name = Webmate::Application.get_channel_name_for(user_id)
         subscriber = EM::Hiredis.connect
-        subscriber.subscribe('channel')
+        subscriber.subscribe(channel_name)
+        warn("user has been subscribed to channel '#{channel_name}'")
+
         subscriber.on(:message) do |channel, message_data|
-          parsed_message = YAML::load(message_data)
-          puts "message received on channel '#{channel}': #{parsed_message}"
-          response_data = parsed_message[:response]
-          options       = parsed_message[:options]
-
-          user_id = 123456 # use user_credentials for this
-          receivers = options[:for] || []
-          access_allowed = receivers == :all || receivers.include?(user_id)
-
-          if access_allowed
-            packet = Webmate::SocketIO::Packets::Message.new(response_data)
-            websocket.send(packet.to_packet)
-          end
+          response_data = YAML::load(message_data)
+          packet = Webmate::SocketIO::Packets::Message.new(response_data)
+          websocket.send(packet.to_packet)
         end
 
         subscriber

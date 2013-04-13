@@ -70,7 +70,7 @@ class Webmate::Application
   register Sinatra::Reloader
   register SinatraMore::MarkupPlugin
 
-  helpers Webmate::Views::Helpers
+  #helpers Webmate::Views::Helpers
   helpers Sinatra::Cookies
   helpers Sinatra::Sprockets::Helpers
 
