@@ -20,7 +20,7 @@ module Webmate
         }
 
         def initialize(packet_data = {})
-          @packet_data  = packet_data
+          @packet_data  = packet_data.with_indifferent_access
         end
 
         # packet should be created by socket.io spec 

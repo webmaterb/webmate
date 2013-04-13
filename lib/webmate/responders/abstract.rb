@@ -99,8 +99,9 @@ module Webmate::Responders
       # prepare args for socket.io message packet
       # this should be prepared data to create socket.io message
       # without any additional actions
-      packet = Webmate::SocketIO::Packets::Message.prepare_packet_data(response)
-      data = YAML::dump(packet)
+      packet_data = Webmate::SocketIO::Packets::Message.prepare_packet_data(response)
+      data = Webmate::Application.dump(packet_data)
+
       @publish_queue.each do |user_id|
         channel_name = Webmate::Application.get_channel_name_for(user_id)
         connection.publish(channel_name, data)

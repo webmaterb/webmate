@@ -102,6 +102,14 @@ module Webmate
       def get_channel_name_for(user_id)
         channel_name = "some-unique-key-for-app-#{user_id}"
       end
+
+      def dump(obj)
+        Yajl::Encoder.encode(obj)
+      end
+
+      def load(str)
+        Yajl::Parser.parse(str)
+      end
     end
   end
 end
