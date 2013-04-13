@@ -11,7 +11,7 @@ module Webmate::Responders
       @params  = request_info[:params]
 
       # publishing actions
-      @publish_queue = []
+      @users_to_notify = []
 
       @response = nil
     end
@@ -44,8 +44,9 @@ module Webmate::Responders
         options = default_options.merge(options)
         @response = Response.new(response, options)
       end
-      # publishing actions
-      publish(@response)
+      # publish changes to users actions
+      async { publish(@response) }
+
       @response
     end
 
@@ -74,16 +75,15 @@ module Webmate::Responders
     include Webmate::Responders::Callbacks
 
     # subscriptions
-    def event_bus
-      @event_bus || build_connection
+    def publisher
+      @publisher ||= build_connection
     end
 
     def build_connection
       EM::Hiredis.connect
-    rescue RuntimeError => e
-      #RuntimeError: eventmachine not initialized: evma_connect_to_server
-      puts("WARNING! syncronius redis connection not implmented yet")
-      "mock for non EM redis connectiion"
+    rescue 
+      warn("problem with connections to redis")
+      nil
     end
 
     # publish current response to private channels
@@ -91,21 +91,33 @@ module Webmate::Responders
     #
     # publish_to(123, 456)
     def publish_to(*user_ids)
-      @publish_queue += user_ids
+      @users_to_notify += user_ids
+    end
+
+    # take @users_to_notify
+    # and pass back channels names with listeners
+    #
+    def channels_to_publish
+      @users_to_notify.each_with_object([]) do |user_id, channels|
+        channel_name = Webmate::Application.get_channel_name_for(user_id)
+        channels << channel_name if channel_active?(channel_name)
+      end
+    end
+
+    def channel_active?(channel_name)
+      return true # in development
     end
 
     def publish(response)
-      connection = build_connection
+      return if publisher.nil?
+
       # prepare args for socket.io message packet
       # this should be prepared data to create socket.io message
       # without any additional actions
       packet_data = Webmate::SocketIO::Packets::Message.prepare_packet_data(response)
       data = Webmate::Application.dump(packet_data)
 
-      @publish_queue.each do |user_id|
-        channel_name = Webmate::Application.get_channel_name_for(user_id)
-        connection.publish(channel_name, data)
-      end
+      channels_to_publish.each {|channel_name| publisher.publish(channel_name, data) }
     end
   end
 end

@@ -6,7 +6,6 @@ module Webmate
 
       if route_info = base.routes.match(@request.request_method, transport, @request.path)
         if @request.websocket?
-          channel_name = "user-channel-#{Time.now.to_i}"
           session_id = route_info[:params][:session_id].inspect
           Webmate::Websockets.subscribe(session_id, @request) do |message|
             if route_info = base.routes.match(message['method'], 'WS', message.path)
@@ -77,7 +76,10 @@ module Webmate
     def parsed_request_params
       request_params = HashWithIndifferentAccess.new
       request_params.merge!(@request.params || {})
-      request_params.merge!(Rack::Utils.parse_nested_query(@request.body.read) || {})
+
+      request_body = @request.body.read
+      #request_params.merge!(Rack::Utils.parse_nested_query(request_body) || {})
+      request_params.merge!(JSON.parse(request_body)) if request_body.present?
 
       request_params
     end
