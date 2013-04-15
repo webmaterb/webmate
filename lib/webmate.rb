@@ -49,7 +49,9 @@ require 'webmate/socket.io/packets/ack'
 require 'webmate/socket.io/packets/error'
 require 'webmate/socket.io/packets/noop'
 
-require "#{Webmate.root}/config/config"
+# it's not correct. app config file should be required by app
+file = "#{Webmate.root}/config/config"
+require file if FileTest.exists?(file)
 
 configatron.app.load_paths.each do |path|
   Dir[ File.join( Webmate.root, path, '**', '*.rb') ].each do |file|
@@ -111,4 +113,6 @@ end
 path = File.expand_path("#{WEBMATE_ROOT}/config/initializers/*.rb")
 Dir[path].each { |initializer| require_relative(initializer) }
 
-require "#{WEBMATE_ROOT}/config/application"
+# it's not correct. app config file should be required by app
+file_path = "#{WEBMATE_ROOT}/config/application"
+require file_path if FileTest.exists?(file_path)
