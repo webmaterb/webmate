@@ -46,7 +46,6 @@ module Webmate
 
       # handshake
       add_route(Webmate::Route.new(route_options.merge(
-        transport: ["HTTP"],
         path: "/#{namespace}/:version_id",
         responder: Webmate::SocketIO::Actions::Handshake,
       )))

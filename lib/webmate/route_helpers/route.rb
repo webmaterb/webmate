@@ -1,10 +1,16 @@
 module Webmate
   class Route
-    FIELDS = [:method, :path, :action, :transport, :responder, :route_regexp]
+    FIELDS = [:method, :path, :action, :transport, :responder, :route_regexp, :static_params]
     attr_reader *FIELDS
 
-    attr_reader :route_regexp
-
+    # method: GET/POST/PUT/DELETE
+    # path  : /user/123/posts/123/comments
+    # transport: HTTP/WS/
+    # responder: class, responsible to 'respond' action
+    # action: method in webmate responders, called to fetch data
+    # static params: additional params hash, which will be passed to responder
+    #   for example, { :scope => :user }
+    #
     def initialize(args)
       values = args.with_indifferent_access
       FIELDS.each do |field_name|
@@ -32,7 +38,11 @@ module Webmate
     #  }
     def match(request_path)
       if match_data = @route_regexp.match(request_path)
-        route_data = { action: @action, responder: @responder, params: {}}
+        route_data = { 
+          action: @action,
+          responder: @responder,
+          params: HashWithIndifferentAccess.new(static_params || {})
+        }
         @substitution_attrs.each_with_index do |key, index|
           route_data[:params][key] = match_data[index.next]
         end
