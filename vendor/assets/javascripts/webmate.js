@@ -5,5 +5,6 @@
 //= require webmate/libs/socket.io
 //= require webmate/init
 //= require webmate/client
+//= require webmate/auth
 //= require webmate/backbone_ext/sync
 //= require webmate/backbone_ext/resources

@@ -9,14 +9,10 @@
     read: "GET"
     read_all: "GET"
 
-  window.Webmate.getUserWebsocketToken = ->
-    $('meta[name="websocket-token"]').attr('content')
-
   # get an alias
   window.Backbone.sync_with_ajax = window.Backbone.sync
 
   window.Backbone.sync = (method, model, options) ->
-    console.log('sync')
     # use default behaviour
     if not (window.Webmate && window.Webmate.websocketsEnabled)
       # clean options?
@@ -36,7 +32,7 @@
         metadata: {
           collection_url: collection_url,
           method: method,
-          user_websocket_token: window.Webmate.getUserWebsocketToken()
+          user_websocket_token: Webmate.Auth.getToken()
         },
         params: {}
       }

@@ -1,3 +1,5 @@
+require 'redis'
+
 module Webmate
   class Application < Sinatra::Base
     # override sinatra's method
@@ -6,6 +8,10 @@ module Webmate
 
       if route_info = base.routes.match(@request.request_method, transport, @request.path)
         if @request.websocket?
+          unless token_valid?(route_info[:params][:scope])
+            return  [401, {}, []]
+          end
+
           session_id = route_info[:params][:session_id].inspect
           Webmate::Websockets.subscribe(session_id, @request) do |message|
             if route_info = base.routes.match(message['method'], 'WS', message.path)
@@ -13,7 +19,8 @@ module Webmate
                 path: message.path,
                 metadata: message.metadata || {},
                 action: route_info[:action],
-                params: message.params.merge(route_info[:params])
+                params: message.params.merge(route_info[:params]),
+                request: @request
               }
               # here we should create subscriber who can live
               # between messages.. but not between requests.
@@ -65,23 +72,48 @@ module Webmate
         path: @request.path,
         metadata: metadata || {},
         action: route_info[:action],
-        params: request_params.merge(route_info[:params])
+        params: request_params.merge(route_info[:params]),
+        request: @request
       }
     end
 
     # @request.params  working only for get params
     # and params in url line ?key=value
-    # but this not work for post/put body params
-    # issue related to parse
     def parsed_request_params
       request_params = HashWithIndifferentAccess.new
       request_params.merge!(@request.params || {})
 
+      # read post or put params. this will erase  params
+      # {code: 123, mode: 123}
+      # "code=123&mode=123"
       request_body = @request.body.read
-      #request_params.merge!(Rack::Utils.parse_nested_query(request_body) || {})
-      request_params.merge!(JSON.parse(request_body)) if request_body.present?
+      if request_body.present?
+        body_params = begin
+          JSON.parse(request_body) # {code: 123, mode: 123}
+        rescue JSON::ParserError
+          Rack::Utils.parse_nested_query(request_body) # "code=123&mode=123"
+        end
+      else
+        body_params = {}
+      end
 
-      request_params
+      request_params.merge(body_params) 
+    end
+
+    def token_valid?(scope = :user)
+      user = @request.env['warden'].user(scope)
+      return false unless user
+
+      value = Webmate::Application.redis.get(user.token_key)
+
+      if value.is_a?(String)
+        token = @request.params["token"]
+
+        token_info = Yajl::Parser.parse(value)
+        token_info['token'] == token && Time.parse(token_info['expire_at']).utc > Time.now.utc
+      else
+        false
+      end
     end
 
     class << self
@@ -111,6 +143,10 @@ module Webmate
 
       def load(str)
         Yajl::Parser.parse(str)
+      end
+
+      def redis
+        @redis ||= Redis.new
       end
     end
   end

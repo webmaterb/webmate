@@ -6,7 +6,6 @@ class Webmate.Client
 
     if @useWebsockets()
       @websocket = @createConnection( (message) ->
-        console.log('place for fire')
         metadata = message.request.metadata
         eventBindings = @bindings["#{metadata.collection_url}/#{metadata.method}"]
         
@@ -21,10 +20,15 @@ class Webmate.Client
     self = @
     @clientId or= Math.random().toString(36).substr(2)
 
+    # pass callback func, if needed be sure what callback exists
+    token = Webmate.Auth.getToken()
+    return false unless token?
+
     socket = new io.Socket
       resource: @channel_name
       host: location.hostname
       port: Webmate.websocketsPort or location.port
+      query: $.param(token: token)
 
     socket.on "connect", () ->
       console.log("connection established")

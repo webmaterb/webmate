@@ -2,7 +2,7 @@ module Webmate
   class Websockets
     class << self
       def subscribe(session_id, request, &block)
-        user_id = 1 # get user from session id ?
+        user_id = request.env['warden'].user.id
 
         request.websocket do |websocket|
           # subscribe user to redis channel
@@ -30,7 +30,8 @@ module Webmate
 
       def subscribe_to_personal_channel(user_id, websocket)
         channel_name = Webmate::Application.get_channel_name_for(user_id)
-        subscriber = EM::Hiredis.connect
+
+        subscriber = EM::Hiredis.connect.pubsub
         subscriber.subscribe(channel_name)
         warn("user has been subscribed to channel '#{channel_name}'")
 

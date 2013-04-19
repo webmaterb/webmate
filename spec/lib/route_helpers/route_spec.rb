@@ -1,7 +1,8 @@
 require 'spec_helper'
 
-class TestResponder
-end
+# responder to use as param for route creation.
+# should not be used for another
+class TestResponder; end
 
 def build_route_for(path, action = "any", responder = "test_responder")
   route_args = {

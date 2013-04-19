@@ -55,6 +55,7 @@ module Webmate
         transport: ["WS"],
         path: "/#{namespace}/:version_id/websocket/:session_id",
         responder: Webmate::SocketIO::Actions::Connection,
+        action: 'connection'
       )))
     end
 

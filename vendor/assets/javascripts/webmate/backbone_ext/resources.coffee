@@ -16,7 +16,6 @@ Backbone.Collection::bindSocketEvents = () ->
 
   path = _.result(@, 'url')
 
-  console.log("bind for '#{path}/read' added")
   client.on "#{path}/read", (response, params) =>
     if collection.set(collection.parse(response))
       collection.trigger('sync', collection, response, {})

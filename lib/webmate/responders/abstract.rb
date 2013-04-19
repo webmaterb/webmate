@@ -1,14 +1,18 @@
+require 'em-hiredis'
 require 'webmate/responders/callbacks'
+
 module Webmate::Responders
   class Abstract
     attr_accessor :action, :path, :metadata, :params
+    attr_reader :request
 
     # request info - current request params
     def initialize(request_info)
-      @action = request_info[:action]
-      @path   = request_info[:path]
+      @action   = request_info[:action]
+      @path     = request_info[:path]
       @metadata = request_info[:metadata]
-      @params  = request_info[:params]
+      @params   = request_info[:params]
+      @request  = request_info[:request]
 
       # publishing actions
       @users_to_notify = []
@@ -98,7 +102,7 @@ module Webmate::Responders
     # and pass back channels names with listeners
     #
     def channels_to_publish
-      @users_to_notify.each_with_object([]) do |user_id, channels|
+      @users_to_notify.flatten.each_with_object([]) do |user_id, channels|
         channel_name = Webmate::Application.get_channel_name_for(user_id)
         channels << channel_name if channel_active?(channel_name)
       end

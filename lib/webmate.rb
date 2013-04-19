@@ -18,7 +18,6 @@ require 'webmate/logger'
 
 require 'bundler'
 Bundler.setup
-Bundler.require(:default, Webmate.env.to_sym)
 if Webmate.env == 'development'
   Bundler.require(:assets)
 end
@@ -31,10 +30,11 @@ require 'webmate/responders/response'
 require 'webmate/services/base'
 require 'webmate/observers/base'
 require 'webmate/decorators/base'
-require 'webmate/route_helpers/channels'
 require 'webmate/route_helpers/routes_collection'
 require 'webmate/route_helpers/route'
 require 'webmate/views/helpers'
+
+Bundler.require(:default, Webmate.env.to_sym)
 
 require 'webmate/socket.io/actions/handshake'
 require 'webmate/socket.io/actions/connection'
@@ -48,9 +48,10 @@ require 'webmate/socket.io/packets/event'
 require 'webmate/socket.io/packets/ack'
 require 'webmate/socket.io/packets/error'
 require 'webmate/socket.io/packets/noop'
+require 'webmate/authentication/base'
 
 # it's not correct. app config file should be required by app
-file = "#{Webmate.root}/config/config"
+file = "#{Webmate.root}/config/config.rb"
 require file if FileTest.exists?(file)
 
 configatron.app.load_paths.each do |path|
@@ -68,7 +69,7 @@ Dir[ File.join( Webmate.root, 'app', 'observers', '**', '*.rb')].each do |file|
 end
 
 class Webmate::Application
-  register Webmate::RouteHelpers::Channels
+  #register Webmate::RouteHelpers::Channels
   register Sinatra::Reloader
   register SinatraMore::MarkupPlugin
 
@@ -114,5 +115,5 @@ path = File.expand_path("#{WEBMATE_ROOT}/config/initializers/*.rb")
 Dir[path].each { |initializer| require_relative(initializer) }
 
 # it's not correct. app config file should be required by app
-file_path = "#{WEBMATE_ROOT}/config/application"
+file_path = "#{WEBMATE_ROOT}/config/application.rb"
 require file_path if FileTest.exists?(file_path)
