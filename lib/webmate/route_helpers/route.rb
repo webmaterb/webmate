@@ -44,7 +44,12 @@ module Webmate
           params: HashWithIndifferentAccess.new(static_params || {})
         }
         @substitution_attrs.each_with_index do |key, index|
-          route_data[:params][key] = match_data[index.next]
+          if key == :splat
+            route_data[:params][key] ||= []
+            route_data[:params][key] += match_data[index.next].split('/')
+          else
+            route_data[:params][key] = match_data[index.next]
+          end
         end
         route_data
       else
@@ -63,8 +68,16 @@ module Webmate
     # substitute :resource_id elements with regexp group in order
     # to easy extract
     def construct_match_regexp
-      @substitution_attrs = path.scan(/:(\w*_id)/).flatten.map(&:to_sym)
-      regexp_string = path.gsub(/:(\w*_id)/) {|t| "([\\w\\d]*)" }
+      substitutions = path.scan(/\/:(\w*)|\/(\*)/)
+      @substitution_attrs = substitutions.each_with_object([]) do |scan, attrs|
+        if scan[0]
+          attrs << scan[0].to_sym
+        elsif scan[1]
+          attrs << :splat
+        end
+      end
+      regexp_string = path.gsub(/\/:(\w*_id)/) {|t| "/([\\w\\d]*)" }
+      regexp_string = regexp_string.gsub(/\/\*/) {|t| "\/(.*)"}
       Regexp.new("^#{regexp_string}\/?$")
     end
 

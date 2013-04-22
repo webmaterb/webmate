@@ -35,6 +35,7 @@ describe Webmate::Route do
   end
 
   it "should match routes with wildcards" do
-    pending "feature not yet implemented"
+    route  = build_route_for('/projects/*')
+    result = build_route_for('/projects/*').match("/projects/qwerty/code")
   end
 end
