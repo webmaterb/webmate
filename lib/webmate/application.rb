@@ -1,59 +1,53 @@
-require 'redis'
-
 module Webmate
   class Application < Sinatra::Base
     # override sinatra's method
     def route!(base = settings, pass_block = nil) 
       transport = @request.websocket? ? 'WS' : 'HTTP'
 
-      if route_info = base.routes.match(@request.request_method, transport, @request.path)
-        if @request.websocket?
-          unless token_valid?(route_info[:params][:scope])
-            return  [401, {}, []]
-          end
+      route_info = base.routes.match(@request.request_method, transport, @request.path)
 
-          session_id = route_info[:params][:session_id].inspect
-          Webmate::Websockets.subscribe(session_id, @request) do |message|
-            if route_info = base.routes.match(message['method'], 'WS', message.path)
-              request_info = {
-                path: message.path,
-                metadata: message.metadata || {},
-                action: route_info[:action],
-                params: message.params.merge(route_info[:params]),
-                request: @request
-              }
-              # here we should create subscriber who can live
-              # between messages.. but not between requests.
-              response = route_info[:responder].new(request_info).respond
-
-              # result of block will be sent back to user
-              response
-            end
-          end
-
-          # this response not pass to user - so we keep connection alive.
-          # passing other response will close connection and socket
-          non_pass_response = [-1, {}, []]
-          return non_pass_response
-
-        else # HTTP
-          # this should return correct Rack response..
-          request_info = params_for_responder(route_info)
-          response = route_info[:responder].new(request_info).respond
-
-          return [response.status, {}, response.data]
-        end
+      # no route case - use default sinatra's processors
+      if !route_info
+        route_eval(&pass_block) if pass_block
+        route_missing
       end
 
-      # code below remains from sinatra
-      # in our case, this class and superclass 
-      # has different routes type [RoutesCollection and Hash]
-      #if base.superclass.respond_to?(:routes)
-      #  return route!(base.superclass, pass_block)
-      #end  
+      if @request.websocket?
+        unless authorized_to_open_connection?(route_info[:params][:scope])
+          return  [401, {}, []]
+        end
 
-      route_eval(&pass_block) if pass_block
-      route_missing
+        session_id = route_info[:params][:session_id].inspect
+        Webmate::Websockets.subscribe(session_id, @request) do |message|
+          if route_info = base.routes.match(message['method'], 'WS', message.path)
+            request_info = {
+              path: message.path,
+              metadata: message.metadata || {},
+              action: route_info[:action],
+              params: message.params.merge(route_info[:params]),
+              request: @request
+            }
+            # here we should create subscriber who can live
+            # between messages.. but not between requests.
+            response = route_info[:responder].new(request_info).respond
+
+            # result of block will be sent back to user
+            response
+          end
+        end
+
+        # this response not pass to user - so we keep connection alive.
+        # passing other response will close connection and socket
+        non_pass_response = [-1, {}, []]
+        return non_pass_response
+
+      else # HTTP
+        # this should return correct Rack response..
+        request_info = params_for_responder(route_info)
+        response = route_info[:responder].new(request_info).respond
+
+        return response.rack_format
+      end
     end
 
     # this method prepare data for responder
@@ -100,20 +94,9 @@ module Webmate
       request_params.merge(body_params) 
     end
 
-    def token_valid?(scope = :user)
-      user = @request.env['warden'].user(scope)
-      return false unless user
-
-      value = Webmate::Application.redis.get(user.token_key)
-
-      if value.is_a?(String)
-        token = @request.params["token"]
-
-        token_info = Yajl::Parser.parse(value)
-        token_info['token'] == token && Time.parse(token_info['expire_at']).utc > Time.now.utc
-      else
-        false
-      end
+    # update this method to create auth restrictions
+    def authorized_to_open_connection?(scope = :user)
+      return true
     end
 
     class << self
@@ -143,10 +126,6 @@ module Webmate
 
       def load(str)
         Yajl::Parser.parse(str)
-      end
-
-      def redis
-        @redis ||= Redis.new
       end
     end
   end

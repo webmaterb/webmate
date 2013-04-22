@@ -28,5 +28,9 @@ module Webmate::Responders
       end
       safe_params
     end
+
+    def rack_format
+      [@status, {}, @data]
+    end
   end
 end
