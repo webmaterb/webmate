@@ -22,17 +22,19 @@ if Webmate.env == 'development'
   Bundler.require(:assets)
 end
 
+require 'webmate/views/helpers'
 require 'webmate/support/sprockets'
 require 'webmate/responders/exceptions'
 require 'webmate/responders/abstract'
 require 'webmate/responders/base'
 require 'webmate/responders/response'
+require 'webmate/responders/rendering_scope'
+require 'webmate/responders/templates'
 require 'webmate/services/base'
 require 'webmate/observers/base'
 require 'webmate/decorators/base'
 require 'webmate/route_helpers/routes_collection'
 require 'webmate/route_helpers/route'
-require 'webmate/views/helpers'
 
 Bundler.require(:default, Webmate.env.to_sym)
 
