@@ -81,8 +81,11 @@ class Webmate::Application
 
   set :public_path, "#{Webmate.root}/public"
   set :root, Webmate.root
-  set :views, Proc.new { File.join(root, 'app', "views") }
   set :reloader, !configatron.app.cache_classes
+
+  set :views, Proc.new { File.join(root, 'app', "views") }
+  set :layouts, Proc.new { File.join(root, 'app', "views", "layouts") }
+  set :template_cache, Tilt::Cache.new
 
   # auto-reloading dirs
   also_reload("#{Webmate.root}/config/config.rb")

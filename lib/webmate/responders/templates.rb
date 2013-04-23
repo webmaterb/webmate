@@ -1,22 +1,5 @@
 module Webmate::Responders
   module Templates
-    def self.included(base)
-      base.class_eval do
-        attr_reader :template_cache
-        attr_reader :settings
-      end
-    end
-
-    def initialize(*args)
-      super
-
-      #TODO this should be fetched from application
-      @settings = OpenStruct.new(
-        views: 'app/views',
-        layouts: 'app/views/layouts'
-      )
-      @template_cache = Tilt::Cache.new
-    end
 
     def slim(template, options = {}, locals = {}, &block)
       render(:slim, template, options, locals, &block)
@@ -24,15 +7,26 @@ module Webmate::Responders
 
     private 
 
-    # layout = Slim::Template.new(layout_file)
-    # content = Slim::Template.new(content_file).render(scope)
-    # layout.render(scope) { c }
+    def settings
+      @settings ||= OpenStruct.new(
+        views:    Webmate::Application.views,
+        layouts:  Webmate::Application.layouts
+      )
+    end
+
+    def template_cache
+      Webmate::Application.template_cache
+    end
+
+    def scope
+      # we can here extend scope with app/responder-specific helpers
+      @scope ||= Webmate::Responders::RenderingScope.new(self)
+    end
 
     def render(engine, data, options = {}, locals = {}, &block)
       views   = settings.views
       layouts = settings.layouts
 
-      scope = Webmate::Responders::RenderingScope.new(self)
       layout = options.delete(:layout) || false
 
       # compile and render template
@@ -66,8 +60,8 @@ module Webmate::Responders
       responder_folder = self.class.name.underscore.sub(/_responder$/, '') # => namespace/responder_name
 
       # NOTE: we can add shared, and other paths from settings
-      folders_to_search = [File.join(WEBMATE_ROOT, views, responder_folder, "*.#{engine.to_s}")]
-      folders_to_search << File.join(WEBMATE_ROOT, views, "*.#{engine.to_s}") 
+      folders_to_search = [File.join(views, responder_folder, "*.#{engine.to_s}")]
+      folders_to_search << File.join(views, "*.#{engine.to_s}") 
 
       search_regexp = /\/#{name}[\w|\.]*.#{engine}$/
       Dir[*folders_to_search].each do |file_path|
