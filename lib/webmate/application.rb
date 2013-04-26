@@ -107,11 +107,12 @@ module Webmate
       end
 
       def define_routes(&block)
-        unless self.settings.routes.is_a?(RoutesCollection)
+        settings = Webmate::Application
+        unless settings.routes.is_a?(RoutesCollection)
           routes = RoutesCollection.new()
-          self.settings.set(:routes, routes)
+          settings.set(:routes, routes)
         end
-        self.settings.routes.define_routes(&block)
+        settings.routes.define_routes(&block)
 
         routes
       end
@@ -124,8 +125,13 @@ module Webmate
         Yajl::Encoder.encode(obj)
       end
 
-      def load(str)
+      def restore(str)
         Yajl::Parser.parse(str)
+      end
+
+      def load_tasks
+        file_path = Pathname.new(__FILE__)
+        load File.join(file_path.dirname, "../../tasks/routes.rake")
       end
     end
   end

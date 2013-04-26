@@ -41,7 +41,9 @@ module Webmate
     #   - for handshake          [ get session id ]
     #   - for connection opening [ switch protocol from http to ws ]
     def enable_websockets_support
-      namespace = configatron.websockets.namespace || 'api'
+      namespace = configatron.websockets.namespace
+      namespace = 'api' if namespace.blank? # || not working with configatron
+
       route_options = { method: 'GET', transport: ['HTTP'], action: 'websocket' }
 
       # handshake

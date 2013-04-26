@@ -36,6 +36,8 @@ require 'webmate/decorators/base'
 require 'webmate/route_helpers/routes_collection'
 require 'webmate/route_helpers/route'
 
+require 'webmate/serializers/base'
+
 Bundler.require(:default, Webmate.env.to_sym)
 
 require 'webmate/socket.io/actions/handshake'
