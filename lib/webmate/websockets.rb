@@ -15,14 +15,15 @@ module Webmate
 
           websocket.onmessage do |message|
             response = block.call(Webmate::SocketIO::Packets::Base.parse(message))
-            #warn("socket for '#{session_id}' \n received: #{message.inspect} and \n sent back a '#{response.inspect}")
-
-            packet = Webmate::SocketIO::Packets::Message.build_response_packet(response)
-            websocket.send(packet.to_packet)
+            if response
+              packet = Webmate::SocketIO::Packets::Message.build_response_packet(response)
+              websocket.send(packet.to_packet)
+            else
+              warn("empty response for #{message.inspect}")
+            end
           end
 
           websocket.onclose do
-            #channels[channel_name].delete(websocket)
             warn("Socket connection closed '#{session_id}'")
           end
         end
