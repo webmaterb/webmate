@@ -34,8 +34,6 @@ require 'webmate/decorators/base'
 require 'webmate/route_helpers/routes_collection'
 require 'webmate/route_helpers/route'
 
-require 'webmate/serializers/base'
-
 Bundler.require(:default, Webmate.env.to_sym)
 
 require 'webmate/socket.io/actions/handshake'
@@ -50,6 +48,10 @@ require 'webmate/socket.io/packets/event'
 require 'webmate/socket.io/packets/ack'
 require 'webmate/socket.io/packets/error'
 require 'webmate/socket.io/packets/noop'
+
+require 'webmate/presenters/base'
+require 'webmate/presenters/scoped'
+require 'webmate/presenters/base_presenter'
 
 # it's not correct. app config file should be required by app
 file = "#{Webmate.root}/config/config.rb"
