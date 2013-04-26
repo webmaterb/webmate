@@ -7,25 +7,17 @@ module Webmate::Responders
 
     private 
 
-    def settings
-      @settings ||= OpenStruct.new(
-        views:    Webmate::Application.views,
-        layouts:  Webmate::Application.layouts
-      )
-    end
-
     def template_cache
-      Webmate::Application.template_cache
+      @cache ||= Webmate::Application.template_cache
     end
 
     def scope
-      # we can here extend scope with app/responder-specific helpers
-      @scope ||= Webmate::Responders::RenderingScope.new(self)
+      @scope ||= Webmate::Views::Scope.new(self)
     end
 
     def render(engine, data, options = {}, locals = {}, &block)
-      views   = settings.views
-      layouts = settings.layouts
+      views     = Webmate::Application.views
+      layouts   = Webmate::Application.layouts
 
       layout = options.delete(:layout) || false
 

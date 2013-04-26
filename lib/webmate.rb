@@ -22,13 +22,12 @@ if Webmate.env == 'development'
   Bundler.require(:assets)
 end
 
-require 'webmate/views/helpers'
+require 'webmate/views/scope'
 require 'webmate/support/sprockets'
 require 'webmate/responders/exceptions'
 require 'webmate/responders/abstract'
 require 'webmate/responders/base'
 require 'webmate/responders/response'
-require 'webmate/responders/rendering_scope'
 require 'webmate/responders/templates'
 require 'webmate/observers/base'
 require 'webmate/decorators/base'
@@ -85,7 +84,12 @@ class Webmate::Application
 
   set :views, Proc.new { File.join(root, 'app', "views") }
   set :layouts, Proc.new { File.join(root, 'app', "views", "layouts") }
-  set :template_cache, Tilt::Cache.new
+
+  if Webmate.env == 'development' # use cache classes here?
+    set :template_cache, Proc.new { Tilt::Cache.new }
+  else
+    set :template_cache, Tilt::Cache.new
+  end
 
   # auto-reloading dirs
   also_reload("#{Webmate.root}/config/config.rb")

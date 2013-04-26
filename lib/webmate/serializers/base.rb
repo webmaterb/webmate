@@ -29,7 +29,7 @@ module Webmate
 
       def initialize(entity_or_collection)
         @entity_or_collection = entity_or_collection || []
-        @entity_or_collection.delete_if(&:blank?) if objects.is_a?(Array)
+        @entity_or_collection.delete_if(&:blank?) if @entity_or_collection.is_a?(Array)
       end
 
       # switch to default method, possible
