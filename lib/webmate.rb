@@ -30,7 +30,6 @@ require 'webmate/responders/base'
 require 'webmate/responders/response'
 require 'webmate/responders/rendering_scope'
 require 'webmate/responders/templates'
-require 'webmate/services/base'
 require 'webmate/observers/base'
 require 'webmate/decorators/base'
 require 'webmate/route_helpers/routes_collection'
@@ -52,7 +51,6 @@ require 'webmate/socket.io/packets/event'
 require 'webmate/socket.io/packets/ack'
 require 'webmate/socket.io/packets/error'
 require 'webmate/socket.io/packets/noop'
-require 'webmate/authentication/base'
 
 # it's not correct. app config file should be required by app
 file = "#{Webmate.root}/config/config.rb"

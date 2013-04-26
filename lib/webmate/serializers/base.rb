@@ -25,23 +25,23 @@ module Webmate
   module Serializers
     class Base
       class_attribute :_attributes
-      attr_reader :object
+      attr_reader :entity_or_collection
 
-      def initialize(objects)
-        @objects = objects || []
-        @objects.delete_if(&:blank?) if objects.is_a?(Array)
+      def initialize(entity_or_collection)
+        @entity_or_collection = entity_or_collection || []
+        @entity_or_collection.delete_if(&:blank?) if objects.is_a?(Array)
       end
 
       # switch to default method, possible
       # like to_s
       #
       def to_json(profile = :default)
-        if @objects.is_a?(Array)
-          json_data = @objects.map do |object|
+        if @entity_or_collection.is_a?(Array)
+          json_data = @entity_or_collection.map do |object|
             get_attributes_for(object, profile)
           end
-        else
-          json_data = get_attributes_for(@objects, profile)
+        else # single object
+          json_data = get_attributes_for(@entity_or_collection, profile)
         end
         Yajl::Encoder.encode(json_data)
       end
