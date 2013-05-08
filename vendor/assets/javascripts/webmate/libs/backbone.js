@@ -1085,6 +1085,7 @@
     // attached directly to the view.  See `viewOptions` for an exhaustive
     // list.
     _configure: function(options) {
+      // rewrite to inherit
       if (this.options) options = _.extend({}, _.result(this, 'options'), options);
       _.extend(this, _.pick(options, viewOptions));
       this.options = options;

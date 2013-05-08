@@ -1,6 +1,4 @@
-window.Webmate or= {}
-
-# this will assign to WebmateAuth
+# this will be assign to Webmate.Auth
 #   {
 #     token:              "string"
 #     getToken:           "function(callback)"
@@ -18,7 +16,7 @@ window.Webmate or= {}
 #
 #  for now, delayed applies of callback not implemented
 
-window.Webmate.Auth = (->
+define 'auth', ['jquery'], ($) ->
   authToken = null
 
   _setToken = (token) ->
@@ -55,9 +53,9 @@ window.Webmate.Auth = (->
   publicUnauthorize = () ->
     _setToken(null)
 
-
     # return object
-  getToken: publicGetToken
-  isAuthorized: publicIsAuthorized
-  unAuthorize: publicUnauthorize
-)()
+  return {
+    getToken: publicGetToken
+    isAuthorized: publicIsAuthorized
+    unAuthorize: publicUnauthorize
+  }

@@ -23,7 +23,7 @@ if Webmate.env == 'development'
 end
 
 require 'webmate/views/scope'
-require 'webmate/support/sprockets'
+#require 'webmate/support/sprockets'
 require 'webmate/responders/exceptions'
 require 'webmate/responders/abstract'
 require 'webmate/responders/base'
@@ -78,7 +78,7 @@ class Webmate::Application
 
   #helpers Webmate::Views::Helpers
   helpers Sinatra::Cookies
-  helpers Sinatra::Sprockets::Helpers
+  helpers Webmate::Sprockets::Helpers
 
   set :public_path, "#{Webmate.root}/public"
   set :root, Webmate.root
@@ -109,7 +109,7 @@ class Webmate::Application
                            secret: configatron.cookies.secret
 end
 
-Sinatra::Sprockets.configure do |config|
+Webmate::Sprockets.configure do |config|
   config.app = Webmate::Application
   ['stylesheets', 'javascripts', 'images'].each do |dir|
     # require application assets
@@ -121,6 +121,8 @@ Sinatra::Sprockets.configure do |config|
   config.compile = configatron.assets.compile
   config.digest = configatron.assets.digest
 end
+
+Tilt::CoffeeScriptTemplate.default_bare = true
 
 path = File.expand_path("#{WEBMATE_ROOT}/config/initializers/*.rb")
 Dir[path].each { |initializer| require_relative(initializer) }

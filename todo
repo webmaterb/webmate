@@ -1,0 +1,22 @@
+# each of socket.io sockets have unique session id
+
+Webmate.channels.api.websocket.transport.sessid
+
+auth restrictions:
+  role-based;
+
+  single-object instance based;
+
+
+each user should have separate channel in redis.
+  so 2 tabs can have 
+
+
+when client establish a socket-connection,
+we create an object for checking auth user rights
+and other responses will to throught this object.
+each for socket
+
+1)
+each user should have own channel in redis
+websocket.close - unsubscribe from channel.

@@ -46,6 +46,7 @@ module Sinatra
         end
       end
 
+      # check
       environment.context_class.instance_eval do
         include Helpers
       end
