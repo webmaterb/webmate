@@ -48,14 +48,14 @@ module Webmate
 
       # handshake
       add_route(Webmate::Route.new(route_options.merge(
-        path: "/#{namespace}/:version_id",
+        path: "#{namespace}/:version_id",
         responder: Webmate::SocketIO::Actions::Handshake,
       )))
 
       # transport connection
       add_route(Webmate::Route.new(route_options.merge(
         transport: ["WS"],
-        path: "/#{namespace}/:version_id/websocket/:session_id",
+        path: "#{namespace}/:version_id/websocket/:session_id",
         responder: Webmate::SocketIO::Actions::Connection,
         action: 'open'
       )))

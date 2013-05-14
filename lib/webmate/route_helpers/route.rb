@@ -78,6 +78,7 @@ module Webmate
       end
       regexp_string = path.gsub(/\/:(\w*_id)/) {|t| "/([\\w\\d]*)" }
       regexp_string = regexp_string.gsub(/\/\*/) {|t| "\/(.*)"}
+      regexp_string = regexp_string.sub(/^\/?/, '\/?')
       Regexp.new("^#{regexp_string}\/?$")
     end
 
