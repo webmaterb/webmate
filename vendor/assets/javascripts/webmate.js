@@ -1,50 +1,39 @@
-// not async module definition
-// deps: ['backbone', 'jquery', 'underscore', 'auth']
-(function(){
+define('webmate', [
+  'require',
+  'underscore',
+  'backbone',
+  'jquery',
+//  '/assets/webmate/libs/socket.io.js',
+  '/assets/webmate/auth.js',
+  '/assets/webmate/client.js',
+  '/assets/webmate/backbone_ext/resources',
+  '/assets/webmate/backbone_ext/sync.js'
+], function(require, _, Backbone, $, auth, client, resources, sync){
 
-  webmate = {
-    channels: {},
-    websocketsEnabled: true
+  f_build_client = function(channel){
+    var new_client = new client(channel);
+    Webmate.channels[channel] = new_client;
+    return new_client;
   }
 
-  this.Webmate = webmate
+  f_connect = function(credentials, callback) {
+    for (channel in Webmate.channels) {
+      Webmate.channels[channel].connect(credentials)
+    }
+    // we don't wait connection establish
+    // socket.io should supports requests queue
+    callback.call()
+    return true;
+  }
 
-  require(['/assets/webmate/auth.js'],   function(auth){ 
-    this.Webmate.Auth = auth
-  });
-
-  require(['/assets/webmate/client.js'], function(Client) { 
-    /* module exports data to global backbone var*/
-  });
-
-  require(['/assets/webmate/backbone_ext/sync.js'], function(Sync) { 
-    /* module exports data to global backbone var*/
-  });
-
-  require(['/assets/webmate/backbone_ext/resources'], function(Resources) { 
-    /* module exports data to global backbone var*/
-  })
+  this.Webmate = {
+    channels: {},
+    websocketsEnabled: true,
+    Auth: require('/assets/webmate/auth.js'),
+    Client: require('/assets/webmate/client.js'),
+    buildClient: f_build_client,
+    connect: f_connect
+  }
 
   this.Webmate
-
-}).call(this);
-/*
-// join all webmate js to single webmate object
-define('webmate',
-  [
-    'backbone',
-    'jquery',
-    'underscore',
-    'auth',
-    'sync'
-  ],
-  function(Backbone, $, _, auth, sync){
-//    console.log(arguments)
-
-    return {
-      channels: {},
-      webmate_version: 'test',
-      Auth: auth
-    }
 })
-*/

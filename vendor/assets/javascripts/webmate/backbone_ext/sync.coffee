@@ -1,4 +1,4 @@
-define (require) ->
+define ['backbone','webmate'], (bb, webmate) ->
 
   methodMap =
     create: "POST"
@@ -38,5 +38,6 @@ define (require) ->
       if (method == 'create' || method == 'update' || method == 'patch')
         packet_data.params = JSON.stringify(options.attrs || model.toJSON(options))
 
+      console.log('check', method)
       Webmate.channels['api'].send(url, packet_data, methodMap[method])
       model.trigger "request", model

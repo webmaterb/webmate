@@ -16,7 +16,7 @@
 #
 #  for now, delayed applies of callback not implemented
 
-define 'auth', ['jquery'], ($) ->
+define ['jquery'], ($) ->
   authToken = null
 
   _setToken = (token) ->
@@ -36,7 +36,7 @@ define 'auth', ['jquery'], ($) ->
       success: (data) ->
         if data && data.token
           _setToken(data.token)
-          callback.call(window, data.token)
+          callback.call(window, data.token) if callback
 
   publicGetToken = (callback) ->
     if publicIsAuthorized()
@@ -54,8 +54,10 @@ define 'auth', ['jquery'], ($) ->
     _setToken(null)
 
     # return object
-  return {
+  auth = {
     getToken: publicGetToken
     isAuthorized: publicIsAuthorized
     unAuthorize: publicUnauthorize
   }
+
+  return auth

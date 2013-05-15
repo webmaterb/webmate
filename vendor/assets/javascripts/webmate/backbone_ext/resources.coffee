@@ -1,10 +1,11 @@
 define [
   '/assets/webmate/libs/underscore.js',
   '/assets/webmate/libs/backbone.js'
-], (_, backbone) ->
+], (underscore, backbone) ->
   # NOTE - export value not configured for this absolute path 
   # so backbone var will be not defined.
   # anyway, we update globally exported Backbone
+  # the same for underscore
   #
   Backbone.Model::idAttribute = 'id'
   Backbone.Model::resourceName = -> @collection.resourceName()
@@ -20,7 +21,7 @@ define [
 
     # note: possible, this should be in webmate
     client = Webmate.channels[@channel]
-    client or= Webmate.connect(@channel)
+    client or= Webmate.buildClient(@channel)
 
     path = _.result(@, 'url')
 
