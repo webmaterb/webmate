@@ -38,6 +38,9 @@ define ['backbone','webmate'], (bb, webmate) ->
       if (method == 'create' || method == 'update' || method == 'patch')
         packet_data.params = JSON.stringify(options.attrs || model.toJSON(options))
 
+      # catch single model work
+      #model.listenTo(channel, callbacks)
+
       console.log('check', method)
       Webmate.channels['api'].send(url, packet_data, methodMap[method])
       model.trigger "request", model
