@@ -22,8 +22,13 @@ module Webmate::Views
       %Q{<meta content="#{user_websocket_token}" name="websocket-token" />}
     end
 
+    def request
+      @responder.request
+    end
+
     def requirejs_include_tag(file_name)
-      %Q{<script data-main="assets/#{file_name}" src="assets/webmate/libs/require.js" />"}
+      application_file_url = "#{request.env['rack.url_scheme']}://#{request.env['HTTP_HOST']}/assets/#{file_name}"
+      javascript_include_tag 'webmate/libs/require.js', 'data-main' => application_file_url
     end
   end
 end
