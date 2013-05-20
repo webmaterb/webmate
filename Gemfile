@@ -6,8 +6,8 @@ gemspec
 group :development do
   gem 'rake'
   gem 'rspec'
+end
 
-  gem 'alphasights-sinatra-sprockets',
-    require: 'sinatra-sprockets',
-    git: 'git://github.com/droidlabs/sinatra-sprockets.git'
+group :assets do
+  gem 'webmate-sprockets', require: 'webmate-sprockets'
 end
