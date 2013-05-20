@@ -38,4 +38,9 @@ describe Webmate::Route do
     route  = build_route_for('/projects/*')
     result = build_route_for('/projects/*').match("/projects/qwerty/code")
   end
+
+  it "should ignore heading '/'" do
+    build_route_for('projects').match('/projects')
+    build_route_for('/projects').match('projects')
+  end
 end

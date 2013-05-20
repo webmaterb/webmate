@@ -109,7 +109,7 @@ module Webmate
       def define_routes(&block)
         settings = Webmate::Application
         unless settings.routes.is_a?(RoutesCollection)
-          routes = RoutesCollection.new()
+          routes = RoutesCollection.new(configatron.websockets.to_hash)
           settings.set(:routes, routes)
         end
         settings.routes.define_routes(&block)

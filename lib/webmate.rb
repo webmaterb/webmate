@@ -9,6 +9,7 @@ require 'sinatra_more/markup_plugin'
 require "configatron"
 require "rack/contrib/post_body_content_type_parser"
 require "yajl"
+require 'webmate-sprockets'
 
 require 'webmate/env'
 require 'webmate/application'

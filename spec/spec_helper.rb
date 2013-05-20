@@ -6,10 +6,6 @@ SPECDIR = dir
 $LOAD_PATH.unshift("#{dir}/../lib")
 
 require 'rubygems'
-#require 'mocha'
-#require 'rspec'
-#require 'facter'
-#require 'fileutils'
 
 require File.join(dir, '..', 'lib', 'webmate.rb')
 

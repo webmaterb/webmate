@@ -1,14 +1,19 @@
 module Webmate
   class RoutesCollection
-    TRANSPORTS = [:ws, :http]
 
     attr_reader :routes
 
-    def initialize
+    # options is configatron.websockets part
+    #   enabled:
+    #   port:
+    #   namespace:
+    def initialize(options = {})
       @routes = {}
       @resource_scope = []
-      
-      enable_websockets_support
+
+      parse_options(options)
+
+      enable_websockets_support if websockets_enabled?
     end
 
     def define_routes(&block)
@@ -41,21 +46,18 @@ module Webmate
     #   - for handshake          [ get session id ]
     #   - for connection opening [ switch protocol from http to ws ]
     def enable_websockets_support
-      namespace = configatron.websockets.namespace
-      namespace = 'api' if namespace.blank? # || not working with configatron
-
       route_options = { method: 'GET', transport: ['HTTP'], action: 'websocket' }
 
       # handshake
       add_route(Webmate::Route.new(route_options.merge(
-        path: "#{namespace}/:version_id",
+        path: "#{websockets_namespace}/:version_id",
         responder: Webmate::SocketIO::Actions::Handshake,
       )))
 
       # transport connection
       add_route(Webmate::Route.new(route_options.merge(
         transport: ["WS"],
-        path: "#{namespace}/:version_id/websocket/:session_id",
+        path: "#{websockets_namespace}/:version_id/websocket/:session_id",
         responder: Webmate::SocketIO::Actions::Connection,
         action: 'open'
       )))
@@ -139,11 +141,14 @@ module Webmate
 
       resources.each do |resource_name|
         responder = (options[:responder] || "#{resource_name}_responder").classify
-        route_args = { responder: responder, transport: options[:transport] }
+        route_args = { responder: responder, transport: options[:transport]}
 
         [:read, :read_all, :update, :delete, :create].each do |action_name|
+          responder_action = options[:action] || action_name
           if actions.include?(action_name)
-            self.send "define_resource_#{action_name}_method", resource_name.to_s, route_args
+            self.send "define_resource_#{action_name}_method",
+              resource_name.to_s,
+              route_args.merge(action: responder_action.to_s)
           end
         end
 
@@ -233,10 +238,10 @@ module Webmate
     # normalize_transport_option 
     #   returns array of requested transports, but available ones only
     def normalized_transport_option(transport = nil)
-      return TRANSPORTS.dup if transport.blank?
+      return transports.dup if transport.blank?
       transport = [transport] unless transport.is_a?(Array)
 
-      transport.map{|t| t.to_s.downcase.to_sym} & TRANSPORTS
+      transport.map{|t| t.to_s.downcase.to_sym} & transports
     end
 
     # methods list
@@ -251,23 +256,46 @@ module Webmate
     end
 
     def define_resource_read_all_method(resource_name, route_args) 
-      get "#{path_prefix}/#{resource_name}", route_args.merge(action: :read_all)
+      get "#{path_prefix}/#{resource_name}", route_args
     end
 
     def define_resource_read_method(resource_name, route_args)
-      get "#{path_prefix}/#{resource_name}/:#{resource_name.singularize}_id", route_args.merge(action: :read)
+      get "#{path_prefix}/#{resource_name}/:#{resource_name.singularize}_id", route_args
     end
 
     def define_resource_create_method(resource_name, route_args)
-      post "#{path_prefix}/#{resource_name}", route_args.merge(action: :create)
+      post "#{path_prefix}/#{resource_name}", route_args
     end
 
     def define_resource_update_method(resource_name, route_args)
-      put "#{path_prefix}/#{resource_name}/:#{resource_name.singularize}_id", route_args.merge(action: :update)
+      put "#{path_prefix}/#{resource_name}/:#{resource_name.singularize}_id", route_args
     end
 
     def define_resource_delete_method(resource_name, route_args)
-      delete "#{path_prefix}/#{resource_name}/:#{resource_name.singularize}_id", route_args.merge(action: :delete)
+      delete "#{path_prefix}/#{resource_name}/:#{resource_name.singularize}_id", route_args
+    end
+
+    # options parts
+    def parse_options(options = {})
+      default_options = {
+        enabled: true,
+        port: 80,
+        namespace: 'api'
+      }
+
+      @options = default_options.merge(options.symbolize_keys)
+    end
+
+    def websockets_enabled?
+      @options[:enabled]
+    end
+
+    def websockets_namespace
+      @options[:namespace] || 'api'
+    end
+
+    def transports
+      @transports ||= (websockets_enabled? ? [:ws, :http] : [:http])
     end
   end
 end
