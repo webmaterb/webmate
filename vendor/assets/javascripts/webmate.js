@@ -1,7 +1,7 @@
 define('webmate', [
   'require',
-  'underscore',
-  'backbone',
+  '/assets/webmate/libs/underscore',
+  '/assets/webmate/libs/backbone',
   'jquery',
   '/assets/webmate/auth.js',
   '/assets/webmate/client.js',
