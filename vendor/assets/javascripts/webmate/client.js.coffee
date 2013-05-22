@@ -53,12 +53,20 @@ define [
       }
       websocket.packet(packet)
 
+    # available
+    publicIsOpenedFunction = () ->
+      if websocket?
+        websocket.connected
+      else
+        false
+
     # generate and return new Webmate.Client
     return {
       channel_name:  @channel_name
       on:            publicOnFunction
       send:          publicSendFunction
       connect:       publicConnectFunction
+      opened:        publicIsOpenedFunction
     }
 
   # assign common functions to constructor itself. class methods

@@ -11,10 +11,17 @@ define ['backbone','webmate'], (bb, webmate) ->
   # get an alias
   window.Backbone.sync_with_ajax = window.Backbone.sync
 
+  # method = update
+  # model - single model
+  # options: success(), error(), parse, validate
   window.Backbone.sync = (method, model, options) ->
+    options or= {}
+    sync_transport = options.sync_transport || 'ajax'
+    if window.Webmate.websocketsEnabled && Webmate.channels['api'].opened()
+      sync_transport = 'websockets'
+
     # use default behaviour
-    if not (window.Webmate && window.Webmate.websocketsEnabled)
-      # clean options?
+    if sync_transport == 'ajax'
       window.Backbone.sync_with_ajax(method, model, options)
     else
       # websocket messages protocol.
@@ -25,14 +32,21 @@ define ['backbone','webmate'], (bb, webmate) ->
       url = _.result(model, 'url')
       collection_url = if model.collection then _.result(model.collection, 'url') else url
 
+      metadata = {
+        collection_url: collection_url,
+        method: method,
+        user_websocket_token: Webmate.Auth.getToken()
+      }
+
+      if model instanceof Backbone.Model
+        metadata.id = model.id
+        #model.listenTo(Webmate.channels['api'], "
+      #else if model instanceof Backbone.Collection
+
       packet_data = {
         method: methodMap[method],
         path: url,
-        metadata: {
-          collection_url: collection_url,
-          method: method,
-          user_websocket_token: Webmate.Auth.getToken()
-        },
+        metadata: metadata,
         params: {}
       }
       if (method == 'create' || method == 'update' || method == 'patch')
@@ -41,6 +55,5 @@ define ['backbone','webmate'], (bb, webmate) ->
       # catch single model work
       #model.listenTo(channel, callbacks)
 
-      console.log('check', method)
       Webmate.channels['api'].send(url, packet_data, methodMap[method])
       model.trigger "request", model
