@@ -16,8 +16,10 @@ define ['backbone','webmate'], (bb, webmate) ->
   # options: success(), error(), parse, validate
   window.Backbone.sync = (method, model, options) ->
     options or= {}
-    sync_transport = options.sync_transport || 'ajax'
-    if window.Webmate.websocketsEnabled && Webmate.channels['api'].opened()
+    sync_transport = 'ajax'
+    if options.transport
+      sync_transport = options.transport
+    else if window.Webmate.websocketsEnabled && Webmate.channels['api'].opened()
       sync_transport = 'websockets'
 
     # use default behaviour
