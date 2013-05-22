@@ -50,14 +50,14 @@ define ['jquery'], ($) ->
   publicIsAuthorized = () ->
     not (not _getToken())
 
-  publicUnauthorize = () ->
+  publicResetToken = () ->
     _setToken(null)
 
     # return object
   auth = {
     getToken: publicGetToken
+    resetToken: publicResetToken
     isAuthorized: publicIsAuthorized
-    unAuthorize: publicUnauthorize
   }
 
   return auth
