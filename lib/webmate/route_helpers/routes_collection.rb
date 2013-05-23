@@ -89,7 +89,7 @@ module Webmate
         if is_member_scope? or is_collection_scope?
           route_options[:responder] ||= get_responder_from_scope
           route_options[:action] ||= path
-          route_options[:path] ||= "#{path_prefix}/#{path}"
+          route_options[:path] ||= path
         else
           route_options[:path] = path || '/'
         end
@@ -140,7 +140,10 @@ module Webmate
       actions = normalized_action_option(options.delete(:only))
 
       resources.each do |resource_name|
-        responder = (options[:responder] || "#{resource_name}_responder").classify
+        if (responder = options[:responder]).blank?
+          responder = scope_namespace + "#{resource_name}_responder".classify
+        end
+
         route_args = { responder: responder, transport: options[:transport]}
 
         [:read, :read_all, :update, :delete, :create].each do |action_name|
@@ -154,6 +157,13 @@ module Webmate
 
         nested_resources_eval(resource_name, &block) if block_given?
       end
+    end
+
+    def namespace(name, &block)
+      @resource_scope.push({ namespace: name })
+      collection &block
+    ensure
+      @resource_scope.pop
     end
 
     # should process blocks inside other resource
@@ -174,15 +184,27 @@ module Webmate
     def path_prefix
       prefix = ''
       @resource_scope.each do |scope|
-        prefix << "/#{scope[:resource]}"
-        prefix << "/:#{scope[:resource_id]}" unless scope[:collection]
+        if scope[:namespace]
+          prefix << "/#{scope[:namespace]}"
+        else
+          prefix << "/#{scope[:resource]}"
+          prefix << "/:#{scope[:resource_id]}" unless scope[:collection]
+        end
       end
       prefix
     end
 
     def get_responder_from_scope
       responder_name = @resource_scope.last[:resource]
-      "#{responder_name}_responder".classify.constantize
+      "#{scope_namespace}#{responder_name}_responder".classify.constantize
+    end
+
+    def scope_namespace
+      namespace = ''
+      @resource_scope.each do |scope|
+        namespace += "#{scope[:namespace].to_s.classify}::"
+      end
+      namespace
     end
 
     # methods below designed to set actions on member/collection
@@ -233,6 +255,9 @@ module Webmate
       @resource_scope.present? && @resource_scope.last[:member]
     end
 
+    def is_namespace_scope?
+      @resource_scope.present? && @resource_scope.last[:namespace]
+    end
 
     # helper methods
     # normalize_transport_option 

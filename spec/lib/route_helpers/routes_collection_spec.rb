@@ -4,6 +4,10 @@ class PagesResponder; end
 class ProjectsResponder; end
 class TasksResponder; end
 
+module Api
+  class ProjectsResponder; end
+end
+
 def validate_route(route, responder_class, action_name, params = {})
   route[:responder].should eq(responder_class)
   route[:action].should eq(action_name)
@@ -153,6 +157,28 @@ describe "Webmate::RoutesCollection" do
 
         route = @router.match('GET', 'HTTP', 'projects/123')
         validate_route(route, PagesResponder, 'index')
+      end
+    end
+
+    context "namespaces" do
+      before :all do
+        @router =  Webmate::RoutesCollection.new(enabled: false) 
+        @router.define_routes do
+          namespace :api do
+            resources :tasks, only: [:read_all], responder: TasksResponder
+            resources :projects, only: [:read_all]
+          end
+        end
+      end
+
+      it "should be correct", focus: true do
+        route = @router.match('GET', 'HTTP', 'api/tasks')
+        validate_route(route, TasksResponder, 'read_all')
+      end
+
+      it "should use responders from given namespace", focus: true do
+        route = @router.match('GET', 'HTTP', 'api/projects')
+        validate_route(route, Api::ProjectsResponder, 'read_all')
       end
     end
 
