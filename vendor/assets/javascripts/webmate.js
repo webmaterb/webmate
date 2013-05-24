@@ -35,5 +35,5 @@ define('webmate', [
     connect: f_connect
   }
 
-  this.Webmate
+  return this.Webmate
 })
