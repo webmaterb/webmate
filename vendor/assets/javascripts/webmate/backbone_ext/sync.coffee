@@ -8,6 +8,18 @@ define ['backbone','webmate'], (bb, webmate) ->
     read: "GET"
     read_all: "GET"
 
+  getModelChannel = (model) ->
+    channel_name = _.result(model, 'channel')
+    if !channel_name and model.collection
+      channel_name = _.result(model.collection, 'channel')
+    channel_name or= 'socket'
+
+    channel = Webmate.channels[channel_name]
+    if channel.opened()
+      return channel
+    else
+      return null
+
   # get an alias
   window.Backbone.sync_with_ajax = window.Backbone.sync
 
@@ -17,9 +29,10 @@ define ['backbone','webmate'], (bb, webmate) ->
   window.Backbone.sync = (method, model, options) ->
     options or= {}
     sync_transport = 'ajax'
+    channel = getModelChannel(model)
     if options.transport
       sync_transport = options.transport
-    else if window.Webmate.websocketsEnabled && Webmate.channels['api'].opened()
+    else if window.Webmate.websocketsEnabled && channel
       sync_transport = 'websockets'
 
     # use default behaviour
@@ -42,8 +55,6 @@ define ['backbone','webmate'], (bb, webmate) ->
 
       if model instanceof Backbone.Model
         metadata.id = model.id
-        #model.listenTo(Webmate.channels['api'], "
-      #else if model instanceof Backbone.Collection
 
       packet_data = {
         method: methodMap[method],
@@ -57,5 +68,5 @@ define ['backbone','webmate'], (bb, webmate) ->
       # catch single model work
       #model.listenTo(channel, callbacks)
 
-      Webmate.channels['api'].send(url, packet_data, methodMap[method])
+      channel.send(url, packet_data, methodMap[method])
       model.trigger "request", model
