@@ -305,7 +305,7 @@ module Webmate
       default_options = {
         enabled: true,
         port: 80,
-        namespace: 'api'
+        namespace: 'socket'
       }
 
       @options = default_options.merge(options.symbolize_keys)
@@ -316,7 +316,7 @@ module Webmate
     end
 
     def websockets_namespace
-      @options[:namespace] || 'api'
+      @options[:namespace] || 'socket'
     end
 
     def transports
