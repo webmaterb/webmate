@@ -87,6 +87,8 @@ module Webmate
     # - ..
     def normalize_data_if_needed
       @responder = @responder.to_s.classify.constantize unless @responder.is_a?(Class)
+      # clear trailing '/'
+      @path.sub!(/(\w+)\/+$/){|t| t.sub(/\/+$/, '')}
     end
   end
 end

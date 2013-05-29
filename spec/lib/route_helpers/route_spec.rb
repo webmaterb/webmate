@@ -43,4 +43,15 @@ describe Webmate::Route do
     build_route_for('projects').match('/projects')
     build_route_for('/projects').match('projects')
   end
+
+  it "should ignore trailing '/'" do
+    result = build_route_for('/projects/').match("/projects")
+    result.should_not be_nil
+  end
+
+  it "should not mix '/' and data" do
+    result = build_route_for('/projects/').match("/projects/123")
+    result.should be_nil
+  end
+
 end
