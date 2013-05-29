@@ -3,22 +3,26 @@ module Webmate
     # override sinatra's method
     def route!(base = settings, pass_block = nil) 
       transport = @request.websocket? ? 'WS' : 'HTTP'
+      log_request_started(@request)
 
       route_info = base.routes.match(@request.request_method, transport, @request.path)
 
       # no route case - use default sinatra's processors
       if !route_info
+        log_request_result(401, 'Not Found')
         route_eval(&pass_block) if pass_block
         route_missing
       end
 
       if @request.websocket?
         unless authorized_to_open_connection?(route_info[:params][:scope])
+          log_request_result('401', 'Access Denied')
           return  [401, {}, []]
         end
 
         session_id = route_info[:params][:session_id].inspect
         Webmate::Websockets.subscribe(session_id, @request) do |message|
+          log_request_started(@request, message)
           if route_info = base.routes.match(message['method'], 'WS', message.path)
             request_info = {
               path: message.path,
@@ -27,9 +31,12 @@ module Webmate
               params: message.params.merge(route_info[:params]),
               request: @request
             }
+            log_route_info(route_info, request_info[:params])
             # here we should create subscriber who can live
             # between messages.. but not between requests.
             response = route_info[:responder].new(request_info).respond
+
+            log_request_result(response.status)
 
             # result of block will be sent back to user
             response
@@ -44,8 +51,10 @@ module Webmate
       else # HTTP
         # this should return correct Rack response..
         request_info = params_for_responder(route_info)
+        log_route_info(route_info, parsed_request_params)
         response = route_info[:responder].new(request_info).respond
 
+        log_request_result(response.status)
         return response.rack_format
       end
     end
@@ -98,6 +107,33 @@ module Webmate
     def authorized_to_open_connection?(scope = :user)
       return true
     end
+
+    private
+
+    def log(text, level = :debug)
+      Webmate.logger.dump(text)
+    end
+
+    def log_request_started(request, message = nil)
+      if message
+        log("Started #{message['method']} [WS] #{message.path} for #{request.ip} at #{Time.now.to_s}")
+      else
+        transport = request.websocket? ? 'WS' : 'HTTP'
+        log("Started #{request.request_method} [#{transport}] #{request.path} for #{request.ip} at #{Time.now.to_s}")
+      end
+    end
+
+    def log_route_info(route_info, params)
+      log("Processing #{route_info[:responder].to_s}##{route_info[:action]} with #{params}")
+    end
+
+    def log_request_result(status, description = nil)
+      description = 'OK' if status.to_i == 200
+      log("Completed #{status.to_s} #{description}")
+      Webmate.logger.flush
+    end
+
+    public
 
     class << self
       def configure(env = nil, &block)

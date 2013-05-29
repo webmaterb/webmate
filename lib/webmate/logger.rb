@@ -16,5 +16,9 @@ module Webmate
         out.write %Q{[#{Time.now.strftime("%D %H:%M:%S")}] #{text} \n\n}
       end
     end
+
+    def flush
+      @@logger_file.flush
+    end
   end
 end
