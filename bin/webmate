@@ -46,6 +46,8 @@ when 'server'
   #TODO refactor to
   # require 'lib/commands/server'
   # with options
+  ENV['RACK_ENV'] = options.environment || 'development'
+  puts "Running Webmate Server with env: #{ENV["RACK_ENV"]}"
   require './config/environment'
   require 'thin'
 
