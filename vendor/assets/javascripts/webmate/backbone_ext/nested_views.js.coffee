@@ -29,7 +29,7 @@ define [
           @childViews[view.cid] = view
       return arguments
 
-    removeChildView: (view_or_views) ->
+    removeChildView: () ->
       @childViews or={}
       for view in arguments
         if view instanceof Backbone.View
