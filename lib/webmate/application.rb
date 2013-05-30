@@ -9,7 +9,7 @@ module Webmate
 
       # no route case - use default sinatra's processors
       if !route_info
-        log_request_result(401, 'Not Found')
+        log_request_result(404, 'Not Found')
         route_eval(&pass_block) if pass_block
         route_missing
       end
@@ -124,7 +124,7 @@ module Webmate
     end
 
     def log_route_info(route_info, params)
-      log("Processing #{route_info[:responder].to_s}##{route_info[:action]} with #{params}")
+      log("Processing #{route_info[:responder].to_s}##{route_info[:action]} with params: #{params}")
     end
 
     def log_request_result(status, description = nil)

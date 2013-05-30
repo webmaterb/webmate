@@ -32,6 +32,7 @@ define [
         client_constructor.connectionEventHandler(channel_name)
 
       websocket.onPacket = (packet) ->
+        console.log(packet)
         return unless packet.type is 'message'
         parsed_packet = client_constructor.parsePacketData(packet.data)
         client_constructor.onPacketHandler.call(self, parsed_packet)
