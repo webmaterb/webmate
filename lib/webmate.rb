@@ -65,10 +65,6 @@ require file if FileTest.exists?(file)
 configatron.app.load_paths.each do |path|
   Dir[ File.join( Webmate.root, path, '**', '*.rb') ].each do |file|
     load file
-    #class_name = File.basename(file, '.rb')
-    #eval <<-EOV
-    #  autoload :#{class_name.camelize}, "#{file}"
-    #EOV
   end
 end
 

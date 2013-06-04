@@ -1,7 +1,18 @@
 task :environment do
   require "./config/environment"
 end
-#require 'sinatra/sprockets/rake'
+
+namespace :db do
+  desc "populate db with default data"
+  task :seed => :environment do
+    seed_path = File.join(Webmate.root, 'db', 'seed.rb')
+    if FileTest.exists?(seed_path)
+      require(seed_path)
+    else
+      puts "Seed file not found (searched at #{ seed_path.inspect })"
+    end
+  end
+end
 
 desc "show all routes"
 task :routes => :environment do
