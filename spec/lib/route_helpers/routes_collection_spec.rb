@@ -227,4 +227,26 @@ describe "Webmate::RoutesCollection" do
       end
     end
   end
+
+  describe "format extract" do
+    before :all do
+      @router = Webmate::RoutesCollection.new(enabled: false)
+      @router.define_routes { get '/projects', to: 'projects#read', transport: [:http] }
+    end
+
+    it "should match with setted format" do
+      route = @router.match('GET', 'HTTP', 'projects.some_format')
+      route.should_not be_nil
+    end
+
+    it "should extract .format from path" do
+      route = @router.match('GET', 'HTTP', 'projects.json')
+      route[:format].should eq('json')
+    end
+
+    it "should ignore if format not setted" do
+      route = @router.match('GET', 'HTTP', 'projects')
+      route[:format].should be_nil
+    end
+  end
 end

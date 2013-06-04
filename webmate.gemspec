@@ -28,4 +28,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency("sinatra_more")
   gem.add_dependency("em-hiredis")
   gem.add_dependency("redis")
+  gem.add_dependency("moped")
 end

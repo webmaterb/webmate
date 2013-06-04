@@ -53,6 +53,11 @@ require 'webmate/presenters/base'
 require 'webmate/presenters/scoped'
 require 'webmate/presenters/base_presenter'
 
+require 'webmate/documents/mongo_document'
+require 'webmate/documents/templates'
+require 'webmate/documents/custom_fields'
+require 'webmate/documents/base_template'
+
 # it's not correct. app config file should be required by app
 file = "#{Webmate.root}/config/config.rb"
 require file if FileTest.exists?(file)

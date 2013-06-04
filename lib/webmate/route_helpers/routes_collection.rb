@@ -26,10 +26,12 @@ module Webmate
     #   path      - /projects/123/tasks
     #
     def match(method, transport, path)
+      cleared_path, format_hash = extract_format(path)
+
       routes = get_routes(method, transport)
       routes.each do |route|
-        if info = route.match(path)
-          return info
+        if info = route.match(cleared_path)
+          return format_hash.merge(info)
         end
       end
       nil
@@ -321,6 +323,18 @@ module Webmate
 
     def transports
       @transports ||= (websockets_enabled? ? [:ws, :http] : [:http])
+    end
+
+    # extracting format
+    # split  ./tasks/projects.format to
+    #  tasks/projects and { format: format }
+    def extract_format(path)
+      path.sub!(/\*$/, '')
+      if match_data = path.match(/(\S*)\.(\S+)$/)
+        return match_data[1], { format: match_data[2].to_s.downcase }
+      else
+        return path, {}
+      end
     end
   end
 end

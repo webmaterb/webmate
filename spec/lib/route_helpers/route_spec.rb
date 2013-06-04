@@ -18,40 +18,43 @@ def build_route_for(path, action = "any", responder = "test_responder")
 end
 
 describe Webmate::Route do
-  it "should match simple routes" do
-    result = build_route_for('/projects').match("/projects")
-    result.should_not be_nil
+  context "matching" do
+    it "should match simple routes" do
+      result = build_route_for('/projects').match("/projects")
+      result.should_not be_nil
+    end
+
+    it "should match empty routes" do
+      result = build_route_for('/').match("/")
+      result.should_not be_nil
+    end
+
+    it "should match routes with placements" do
+      result = build_route_for('/projects/:project_id').match("/projects/qwerty")
+      result.should_not be_nil
+      result[:params][:project_id].should == 'qwerty'
+    end
+
+    it "should match routes with wildcards" do
+      route  = build_route_for('/projects/*')
+      result = build_route_for('/projects/*').match("/projects/qwerty/code")
+    end
   end
 
-  it "should match empty routes" do
-    result = build_route_for('/').match("/")
-    result.should_not be_nil
-  end
+  context "helper methods" do
+    it "should ignore heading '/'" do
+      build_route_for('projects').match('/projects').should_not be_nil
+      build_route_for('/projects').match('projects').should_not be_nil
+    end
 
-  it "should match routes with placements" do
-    result = build_route_for('/projects/:project_id').match("/projects/qwerty")
-    result.should_not be_nil
-    result[:params][:project_id].should == 'qwerty'
-  end
+    it "should ignore trailing '/'" do
+      result = build_route_for('/projects/').match("/projects")
+      result.should_not be_nil
+    end
 
-  it "should match routes with wildcards" do
-    route  = build_route_for('/projects/*')
-    result = build_route_for('/projects/*').match("/projects/qwerty/code")
+    it "should not mix '/' and data" do
+      result = build_route_for('/projects/').match("/projects/123")
+      result.should be_nil
+    end
   end
-
-  it "should ignore heading '/'" do
-    build_route_for('projects').match('/projects')
-    build_route_for('/projects').match('projects')
-  end
-
-  it "should ignore trailing '/'" do
-    result = build_route_for('/projects/').match("/projects")
-    result.should_not be_nil
-  end
-
-  it "should not mix '/' and data" do
-    result = build_route_for('/projects/').match("/projects/123")
-    result.should be_nil
-  end
-
 end
