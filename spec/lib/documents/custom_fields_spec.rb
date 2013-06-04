@@ -7,6 +7,7 @@ describe Webmate::Documents::Templates do
     let(:field_options) { double("field options") }
 
     it "should be able to add field" do
+      field_options = { 'system' => false }
       template.add_field(:my_field, field_options)
       template.fields[:my_field].should eq(field_options)
     end
@@ -18,7 +19,7 @@ describe Webmate::Documents::Templates do
     end
 
     it "should be able to remove custom field" do
-      field_options.should_receive(:[]).with(:system).and_return(false)
+      field_options = { 'system' => false }
       # add field
       template.add_field(:my_field, field_options)
 

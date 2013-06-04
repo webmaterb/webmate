@@ -31,7 +31,8 @@ module Webmate
       routes = get_routes(method, transport)
       routes.each do |route|
         if info = route.match(cleared_path)
-          return format_hash.merge(info)
+          info[:params].update(format_hash)
+          return info
         end
       end
       nil

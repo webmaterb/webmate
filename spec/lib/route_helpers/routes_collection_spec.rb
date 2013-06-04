@@ -241,12 +241,12 @@ describe "Webmate::RoutesCollection" do
 
     it "should extract .format from path" do
       route = @router.match('GET', 'HTTP', 'projects.json')
-      route[:format].should eq('json')
+      route[:params][:format].should eq('json')
     end
 
     it "should ignore if format not setted" do
       route = @router.match('GET', 'HTTP', 'projects')
-      route[:format].should be_nil
+      route[:params][:format].should be_nil
     end
   end
 end
