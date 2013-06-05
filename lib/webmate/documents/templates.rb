@@ -9,7 +9,6 @@ module Webmate
         self.fields = self.class.system_fields.merge(self.fields || {})
       end
 
-
       def fields
         attributes[:fields] ||= {}
       end

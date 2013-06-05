@@ -1,6 +1,8 @@
 require 'webmate/responders/abstract'
 module Webmate::Responders
   class Base < Abstract
+    include Webmate::Responders::ResponseFormat
+
     after_filter :_run_observer_callbacks
     after_filter :_send_websocket_events
 

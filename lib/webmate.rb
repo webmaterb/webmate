@@ -24,6 +24,7 @@ if Webmate.env == 'development'
 end
 
 require 'webmate/views/scope'
+require 'webmate/responders/response_format'
 require 'webmate/responders/exceptions'
 require 'webmate/responders/abstract'
 require 'webmate/responders/base'

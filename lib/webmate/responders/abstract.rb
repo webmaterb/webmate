@@ -3,7 +3,7 @@ require 'webmate/responders/callbacks'
 
 module Webmate::Responders
   class Abstract
-    attr_accessor :action, :path, :metadata, :params
+    attr_accessor :action, :path, :metadata
     attr_reader :request
 
     # request info - current request params
@@ -46,8 +46,9 @@ module Webmate::Responders
           action: action
         }
         options = default_options.merge(options)
-        @response = Response.new(response, options)
+        @response = Response.new(convert_to_request_format(response), options)
       end
+
       # publish changes to users actions
       async { publish(@response) }
 
@@ -64,6 +65,7 @@ module Webmate::Responders
 
     def process_action
       raise ActionNotFound unless respond_to?(action_method)
+
       respond_with send(action_method)
     end
 
