@@ -65,8 +65,13 @@ module Webmate::Responders
 
     def process_action
       raise ActionNotFound unless respond_to?(action_method)
+      respond_with responder_response
+    end
 
-      respond_with send(action_method)
+    def responder_response
+      send(action_method)
+    rescue Exception => e
+      propagate_error(e, InternalError)
     end
 
     def render_not_found
@@ -79,6 +84,18 @@ module Webmate::Responders
 
     include ActiveSupport::Rescuable
     include Webmate::Responders::Callbacks
+
+    # set default handler
+    rescue_from Webmate::Responders::InternalError do
+      return Webmate::Responders::Response.new(nil, status: 500)
+    end
+
+    # switch to new error with old backtrace
+    def propagate_error(exception, exception_class = StandardError)
+      error = exception_class.new(exception)
+      error.set_backtrace(exception.backtrace)
+      raise error
+    end
 
     # subscriptions
     def publisher

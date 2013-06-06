@@ -70,7 +70,8 @@ module Webmate
             body:     response.data,
             path:     response.path,
             params:   response.params,
-            metadata: response.metadata
+            metadata: response.metadata,
+            status:   response.status
           }
         end
 
