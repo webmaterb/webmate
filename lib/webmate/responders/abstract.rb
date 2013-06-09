@@ -57,6 +57,8 @@ module Webmate::Responders
 
     def rescue_with_handler(exception)
       if handler = handler_for_rescue(exception)
+        warn(exception.inspect)
+        warn(exception.backtrace)
         handler.arity != 0 ? handler.call(exception) : handler.call
       else
         raise(exception)
@@ -78,6 +80,10 @@ module Webmate::Responders
       @response = Response.new("Action not Found", status: 200)
     end
 
+    def render_error
+      @response = Response.new("Internal Error", status: 500)
+    end
+
     def async(&block)
       block.call
     end
@@ -87,7 +93,7 @@ module Webmate::Responders
 
     # set default handler
     rescue_from Webmate::Responders::InternalError do
-      return Webmate::Responders::Response.new(nil, status: 500)
+      render_error
     end
 
     # switch to new error with old backtrace
