@@ -10,6 +10,7 @@ describe Webmate::Documents::MongoDocument do
 
     it "should store attributes" do
       attrs_mock = double('hash attrs')
+      attrs_mock.stub(:select).and_return(attrs_mock)
       doc = Webmate::Documents::MongoDocument.new(attrs_mock)
       doc.attributes.should eq(attrs_mock)
     end

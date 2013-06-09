@@ -10,7 +10,7 @@ describe Webmate::Documents::Templates do
     end
 
     it "should assign any fields" do
-      obj = ParentTemplate.new(birth_date: { type: :date, system: false })
+      obj = ParentTemplate.new(fields: { birth_date: { type: :date, system: false }})
       obj.fields[:birth_date].should_not be_blank
     end
   end

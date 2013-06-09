@@ -16,7 +16,7 @@ describe Webmate::BaseTemplate do
     end
 
     it "should be able to init with fields" do
-      template = ExampleTemplate.new(name: field)
+      template = ExampleTemplate.new(fields: { name: field })
       template.fields[:name].should eq(field)
       template.fields[:title].should_not be_blank
     end
@@ -29,13 +29,13 @@ describe Webmate::BaseTemplate do
 
     it "should store attributes" do
       field_value = double('field')
-      template = Webmate::BaseTemplate.new(field_name: field_value)
+      template = Webmate::BaseTemplate.new(fields: {field_name: field_value})
       template.attributes[:fields][:field_name].should eq(field_value)
     end
 
     it "should set system fields" do
       field_value = double('field')
-      template = ExampleTemplate.new(field_name: field_value)
+      template = ExampleTemplate.new(fields: {field_name: field_value})
       template.attributes[:fields][:field_name].should eq(field_value)
       template.attributes[:fields][:title].should_not be_blank
     end

@@ -3,20 +3,18 @@ require 'active_support/concern'
 module Webmate
   module Documents
     module Templates
-      extend ActiveSupport::Concern
+      #extend ActiveSupport::Concern
+  
+      def self.included(base)
+        base.send(:attribute, :fields)
+        base.extend ClassMethods
+      end
 
       def assign_system_fields
         self.fields = self.class.system_fields.merge(self.fields || {})
       end
 
-      def fields
-        attributes[:fields] ||= {}
-      end
-
-      def fields=(new_value)
-        attributes[:fields] = new_value
-      end
-
+      # store embedded templates fields
       def template_fields(template_name)
         attributes[:template_fields] ||= {}
         attributes[:template_fields][template_name.to_sym] ||= {}
