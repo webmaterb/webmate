@@ -3,13 +3,14 @@ module Webmate
     class MongoDocument
       def initialize(attrs = {})
         cleaned_attrs = attrs.select do |key, value|
-          self.class.defined_attributes.keys.include?(key.to_sym)
+          self.class.defined_attributes.keys.include?(key.to_s)
         end
         @attributes = cleaned_attrs
       end
 
       def save(attrs = {})
         @attributes.update(attrs)
+        @attributes["_id"] ||= Moped::BSON::ObjectId.new
         self.class.collection.insert(@attributes)
       end
 
@@ -18,7 +19,8 @@ module Webmate
       end
 
       def id
-        Moped::BSON::ObjectId.from_string(@attributes[:_id])
+        _id = @attributes["_id"]
+        _id.present? ? Moped::BSON::ObjectId.from_string(_id) : nil
       end
       
 #      def method_missing(method_name, *args, &block)
@@ -34,28 +36,35 @@ module Webmate
       # add moped proxy for object search?
       class << self
         def attribute(name, options = {})
-          defined_attributes[name.to_sym] = options
+          defined_attributes[name.to_s] = options
           define_method name do
-            attributes[name.to_sym]
+            attributes[name.to_s]
           end 
 
           define_method "#{name}=" do |new_val|
-            attributes[name.to_sym] = new_val
+            attributes[name.to_s] = new_val
           end 
         end
 
         def defined_attributes
-          @defined_attributes ||= { _id: { type: :object_id}, id: { type: :object_id }}
+          @defined_attributes ||= {
+            '_id' => { 'type' => 'object_id'},
+            'id'  => { 'type' => 'object_id'}
+          }
         end
 
         # update selector with setted types
         def build_mongo_condition(selector = {})
-          selector[:_id] = selector.delete(:id) if selector[:id]
+          if selector.is_a?(String) || selector.is_a?(Moped::BSON::ObjectId)
+            selector = { '_id' => selector }
+          end
+          selector.stringify_keys!
+          selector['_id'] = selector.delete('id') if selector['id']
 
           {}.tap do |conditions|
             selector.symbolize_keys.each do |key, value|
               if attribute_definition = defined_attributes[key]
-                if attribute_definition[:type] == :object_id
+                if attribute_definition['type'].to_s == 'object_id' && value.is_a?(String)
                   conditions[key] = Moped::BSON::ObjectId.from_string(value)
                 else
                   conditions[key] = value
@@ -72,7 +81,9 @@ module Webmate
         alias :where :find
 
         def insert(documents, flags = {})
+          documents = [documents] unless document.is_a?(Array)
           collection.insert(documents, flags = {})
+          documents
         end
 
         def delete_all(selector = {})

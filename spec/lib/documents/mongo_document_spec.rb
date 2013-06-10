@@ -24,6 +24,18 @@ describe Webmate::Documents::MongoDocument do
   end
 
   context "save" do
+    let(:collection) { double('collection') }
+
+    it "should assign id if not exists" do
+      Webmate::Documents::MongoDocument.stub!(:collection).and_return(collection)
+      collection.should_receive(:insert).and_return(true)
+
+      doc = Webmate::Documents::MongoDocument.new
+      doc.save
+
+      doc.id.should_not be_blank
+    end
+
     it "should store existed attributes"
     it "should store given attributes"
   end

@@ -6,7 +6,7 @@ module Webmate
       #extend ActiveSupport::Concern
   
       def self.included(base)
-        base.send(:attribute, :fields)
+        base.send(:attribute, 'fields')
         base.extend ClassMethods
       end
 
@@ -16,8 +16,8 @@ module Webmate
 
       # store embedded templates fields
       def template_fields(template_name)
-        attributes[:template_fields] ||= {}
-        attributes[:template_fields][template_name.to_sym] ||= {}
+        attributes['template_fields'] ||= {}
+        attributes['template_fields'][template_name.to_s] ||= {}
       end
 
       # define methods:
@@ -28,27 +28,29 @@ module Webmate
         # and use it's default
         # embedded_template :tasks_template
         def embedded_template(name, options = {})
+          options.stringify_keys!
+          name = name.to_s
           raise "Template class not specified" if name.blank?
-          template_class_name = (options[:template_class] || name).to_s.classify
-          define_method name.to_s do
-            template_object = instance_variable_get("@#{name.to_s}")
+          template_class_name = (options['template_class'] || name).to_s.classify
+          define_method name do
+            template_object = instance_variable_get("@#{name}")
             if !template_object
               template_object = template_class_name.constantize.new(template_fields(name))
-              instance_variable_set("@#{name.to_s}", template_object)
+              instance_variable_set("@#{name}", template_object)
             end
             return template_object
           end
         end
 
         def field(name, options = {})
-          name = name.to_sym
+          name = name.to_s
           raise "Field name not specified" if name.blank?
           raise "Already defined field #{name} for self" if system_fields[name].present?
 
           options = {
-            type: :string
-          }.merge(options.symbolize_keys)
-          options[:system] = true
+            'type' => 'string'
+          }.merge(options.stringify_keys)
+          options['system'] = true
 
           system_fields[name] = options
         end
