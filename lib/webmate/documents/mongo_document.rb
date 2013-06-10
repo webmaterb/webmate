@@ -16,6 +16,10 @@ module Webmate
       def attributes
         @attributes ||= {}
       end
+
+      def id
+        Moped::BSON::ObjectId.from_string(@attributes[:_id])
+      end
       
 #      def method_missing(method_name, *args, &block)
 #        # if method_name.to_s[-1] == '='
@@ -41,20 +45,38 @@ module Webmate
         end
 
         def defined_attributes
-          @defined_attributes ||= {}
+          @defined_attributes ||= { _id: { type: :object_id}, id: { type: :object_id }}
         end
 
-        def find(*args)
-          collection.find(*args).map{|attrs| new(attrs)}
+        # update selector with setted types
+        def build_mongo_condition(selector = {})
+          selector[:_id] = selector.delete(:id) if selector[:id]
+
+          {}.tap do |conditions|
+            selector.symbolize_keys.each do |key, value|
+              if attribute_definition = defined_attributes[key]
+                if attribute_definition[:type] == :object_id
+                  conditions[key] = Moped::BSON::ObjectId.from_string(value)
+                else
+                  conditions[key] = value
+                end
+              end
+            end
+          end
+        end
+
+        # should returns proxy object to support chaining
+        def find(selector = {})
+          collection.find(build_mongo_condition(selector)).map{|attrs| new(attrs)}
         end
         alias :where :find
 
-        def insert(*args)
-          collection.insert(*args)
+        def insert(documents, flags = {})
+          collection.insert(documents, flags = {})
         end
 
-        def delete_all(*args)
-          collection.find(*args).remove_all
+        def delete_all(selector = {})
+          collection.find(build_mongo_condition(selector)).remove_all
         end
         alias :destroy_all :delete_all
 
