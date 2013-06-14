@@ -5,7 +5,9 @@ module Webmate
     attr_accessor :accessor, :resources
 
     def initialize(resources = [])
-      @resources = resources.to_a
+      #resources = resources.to_a if resources.is_a?(Mongoid::Criteria)
+      #resources = resources.to_a if resources.respond_to?(:to_a)
+      @resources = resources
       @errors = []
     end
 
