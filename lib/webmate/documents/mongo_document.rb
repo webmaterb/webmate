@@ -62,7 +62,7 @@ module Webmate
           selector['_id'] = selector.delete('id') if selector['id']
 
           {}.tap do |conditions|
-            selector.symbolize_keys.each do |key, value|
+            selector.each do |key, value|
               if attribute_definition = defined_attributes[key]
                 if attribute_definition['type'].to_s == 'object_id' && value.is_a?(String)
                   conditions[key] = Moped::BSON::ObjectId.from_string(value)
