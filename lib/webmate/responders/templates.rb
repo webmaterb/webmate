@@ -1,5 +1,15 @@
 module Webmate::Responders
   module Templates
+    extend ActiveSupport::Concern
+
+    module ClassMethods
+      def helper(argument)
+        if argument.class.name == 'Module'
+          Webmate::Views::Scope.send(:include, argument)
+        end
+      end
+    end
+
 
     def slim(template, options = {}, locals = {}, &block)
       render(:slim, template, options, locals, &block)
@@ -19,12 +29,11 @@ module Webmate::Responders
       views     = Webmate::Application.views
       layouts   = Webmate::Application.layouts
 
-      layout = options.delete(:layout) || false
-
       # compile and render template
       template        = compile_template(engine, data, options, views)
       output          = template.render(scope, locals, &block)
 
+      layout = options.delete(:layout) || false
       if layout
         layout_template = compile_template(engine, layout, options, layouts)
         output          = layout_template.render(scope, locals) { output }
