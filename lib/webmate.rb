@@ -70,6 +70,11 @@ Dir[ File.join( Webmate.root, 'app', 'observers', '**', '*.rb')].each do |file|
   require file
 end
 
+# include routes
+Dir[ File.join( Webmate.root, 'app', 'routes', '**', '*.rb')].each do |file|
+  require file
+end
+
 class Webmate::Application
   #register Webmate::RouteHelpers::Channels
   register Sinatra::Reloader
