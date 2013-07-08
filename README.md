@@ -18,7 +18,7 @@ Real-time web applications framework in Ruby, based on WebSockets and EventMachi
 
 #### 4. Show available routes
 
-    rake routes
+    $ rake routes
 
 ## Tutorial
 
@@ -85,8 +85,7 @@ config/environment.rb
 
 #### 1. Adding routes
 
-    # app/routes/facade_routes.rb
-
+    # app/routes/homepage_routes.rb
     ExampleApp.define_routes do
       get '/', to: 'pages#index', transport: [:http]
     end
