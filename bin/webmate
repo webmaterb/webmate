@@ -42,7 +42,7 @@ opt_parser.parse!
 
 command = ARGV.shift
 case command
-when 'server'
+when 'server', 's'
   #TODO refactor to
   # require 'lib/commands/server'
   # with options
@@ -53,7 +53,7 @@ when 'server'
   cmd += ["-p", options.port.to_s]
 
   Thin::Runner.new(cmd).run!
-when 'console'
+when 'console', 'c'
   require 'irb'
   ENV["RACK_ENV"] ||= ARGV.first || options.environment || 'development'
   puts "Running Webmate console with env: #{ENV["RACK_ENV"]}"
@@ -61,7 +61,7 @@ when 'console'
   ARGV.clear
   IRB.start
 
-when 'generate'
+when 'generate', 'g'
   puts 'not yet implemented'
   puts opt_parser
 
