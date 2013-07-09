@@ -30,9 +30,10 @@ Gemfile
 
     gem 'webmate'
     gem 'slim'
-    gem 'sass', group: assets
+    gem 'sass'
     gem 'rake'
     gem 'webmate-sprockets'
+    gem 'webmate-client'
 
 config.ru
 
@@ -42,7 +43,7 @@ config.ru
         run Sinatra::Sprockets.environment
       end
     end
-    run ExampleApp
+    run Webmate::Application
 
 config/config.rb
 
@@ -63,30 +64,17 @@ config/config.rb
       config.websockets.port = 3503
     end
 
-config/application.rb
-
-    require 'digest/sha1'
-    require 'base64'
-
-    class ExampleApp < Webmate::Application
-      # do other things)
-    end
-
 config/environment.rb
 
     WEBMATE_ROOT = File.expand_path('.')
     require 'webmate'
-
-    Dir[File.join(WEBMATE_ROOT, 'app', 'routes', '**', '*.rb')].each do |file|
-      require file
-    end
 
 ### Hello world
 
 #### 1. Adding routes
 
     # app/routes/homepage_routes.rb
-    ExampleApp.define_routes do
+    Webmate::Application.define_routes do
       get '/', to: 'pages#index', transport: [:http]
     end
 
@@ -130,7 +118,7 @@ config/environment.rb
             - localhost:27017
 
     # config/initializers/mongoid.rb
-    Mongoid.load!(File.join(WEBMATE_ROOT, 'config', 'mongoid.yml'))
+    Mongoid.load!(File.join(Webmate.root, 'config', 'mongoid.yml'))
 
 #### 4. Models
 

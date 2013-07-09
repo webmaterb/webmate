@@ -1,5 +1,8 @@
 Webmate::Application.configure do |config|
-  config.app.load_paths = ["app/responders", "app/models", "app/services", "app/observers", "app/decorators"]
+  config.app.load_paths = [
+    "app/responders", "app/models", "app/services",
+    "app/observers", "app/decorators", "app/routes"
+  ]
   config.app.cache_classes = false
 
   config.app.name = 'webmate'
