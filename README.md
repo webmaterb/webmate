@@ -1,6 +1,19 @@
 # Webmate
 
-Real-time web applications framework in Ruby, based on WebSockets and EventMachine.
+Webmate is a fully asynchronous real-time web application framework in Ruby. It is built using EventMachine and WebSockets. Webmate primarily designed for providing full-duplex bi-directional communication.
+
+## Why Webmate?
+
+Webmate provides high-level api to create applications based on Websocket. Instead of separating code to http/websocket, you write one code, which may work using http or websocket (or both).
+
+Sample:
+
+    Webmate::Application.define_routes do
+      resources :tasks, transport: [:http, :WS]
+    end
+
+This simple route will allow you create, update, delete tasks using ONE websocket connection.
+
 
 ## Quick start
 
