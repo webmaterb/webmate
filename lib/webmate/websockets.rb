@@ -4,8 +4,6 @@ module Webmate
       def subscribe(session_id, request, &block)
         user_id = request.env['warden'].try(:user).try(:id)
 
-        puts "PARAMS: #{request.params.inspect}"
-
         request.websocket do |websocket|
           # subscribe user to redis channel
           subscribe_to_personal_channel(user_id, websocket)

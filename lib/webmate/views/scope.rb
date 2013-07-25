@@ -1,7 +1,6 @@
 module Webmate::Views
   class Scope
     include Sinatra::Cookies
-    include Webmate::Sprockets::Helpers
 
     def initialize(responder)
       @responder = responder
