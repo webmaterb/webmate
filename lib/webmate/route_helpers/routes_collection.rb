@@ -7,15 +7,18 @@ module Webmate
     def initialize
       @routes = {}
       @resource_scope = []
-      
-      enable_websockets_support
+
+      websockets_enabled = configatron.websockets.enabled
+      websockets_enabled = true if websockets_enabled.blank?
+      enable_websockets_support if websockets_enabled
     end
 
+    # Call this method to define routes in application
     def define_routes(&block)
       instance_eval(&block)
     end
 
-    # get info about matched route
+    # Get list of matched routes
     #   method    - GET/POST/PUT/PATCH/DELETE
     #   transport - HTTP / WS [ HTTPS / WSS ]
     #   path      - /projects/123/tasks
@@ -42,14 +45,15 @@ module Webmate
     #   - for connection opening [ switch protocol from http to ws ]
     def enable_websockets_support
       namespace = configatron.websockets.namespace
-      namespace = 'api' if namespace.blank? # || not working with configatron
+      namespace = 'http_over_websocket' if namespace.blank?
 
-      route_options = { method: 'GET', transport: ['HTTP'], action: 'websocket' }
+      route_options = { method: 'GET', transport: ['HTTP'] }
 
       # handshake
       add_route(Webmate::Route.new(route_options.merge(
         path: "/#{namespace}/:version_id",
         responder: Webmate::SocketIO::Actions::Handshake,
+        action: 'websocket'
       )))
 
       # transport connection
@@ -61,10 +65,8 @@ module Webmate
       )))
     end
 
-    # we store routes in following structure
-    # { method:
-    #     transport: [ routes ]
-    # route - valid object of Webmate::Route class
+    # Add router object to routes
+    #   route - valid object of Webmate::Route class
     def add_route(route)
       # add route to specific node of routes hash
       @routes[route.method.to_s.upcase] ||= {}
@@ -75,7 +77,7 @@ module Webmate
 
     # define methods for separate routes
     #   get '/path', to: , transport: ,
-    # or 
+    # or
     #   resources :projects
     #     member do
     #       get 'read_formatted'
@@ -195,7 +197,7 @@ module Webmate
     #
     #   member do
     #     get "do_on_member"
-    #   end 
+    #   end
     #   prefix /resource_name/resource_id
     def member(&block)
       return if @resource_scope.blank?
@@ -230,7 +232,7 @@ module Webmate
 
 
     # helper methods
-    # normalize_transport_option 
+    # normalize_transport_option
     #   returns array of requested transports, but available ones only
     def normalized_transport_option(transport = nil)
       return TRANSPORTS.dup if transport.blank?
@@ -250,7 +252,7 @@ module Webmate
       methods.map{|m| m.to_s.downcase.to_sym} & default_methods
     end
 
-    def define_resource_read_all_method(resource_name, route_args) 
+    def define_resource_read_all_method(resource_name, route_args)
       get "#{path_prefix}/#{resource_name}", route_args.merge(action: :read_all)
     end
 

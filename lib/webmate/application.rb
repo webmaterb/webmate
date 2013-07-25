@@ -1,9 +1,8 @@
 module Webmate
   class Application < Sinatra::Base
     # override sinatra's method
-    def route!(base = settings, pass_block = nil) 
+    def route!(base = settings, pass_block = nil)
       transport = @request.websocket? ? 'WS' : 'HTTP'
-
       route_info = base.routes.match(@request.request_method, transport, @request.path)
 
       # no route case - use default sinatra's processors
@@ -52,13 +51,13 @@ module Webmate
 
     # this method prepare data for responder
     # {
-    #   path: '/', 
-    #   metadata: {}, 
-    #   action: 'index', 
-    #   params: { test: true } 
+    #   path: '/',
+    #   metadata: {},
+    #   action: 'index',
+    #   params: { test: true }
     # }
     def params_for_responder(route_info)
-      # create unified request info 
+      # create unified request info
       # request_info = { path: '/', metadata: {}, action: 'index', params: { test: true } }
       request_params = parsed_request_params
       metadata = request_params.delete(:metadata)
@@ -91,7 +90,7 @@ module Webmate
         body_params = {}
       end
 
-      request_params.merge(body_params) 
+      request_params.merge(body_params)
     end
 
     # update this method to create auth restrictions

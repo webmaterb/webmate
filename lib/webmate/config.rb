@@ -1,8 +1,10 @@
 Webmate::Application.configure do |config|
-  config.app.load_paths = [
-    "app/responders", "app/models", "app/services",
-    "app/observers", "app/decorators", "app/routes"
-  ]
+  # these files will be required with high priority
+  config.app.priotity_initialize_files = ["config/config.rb"]
+  # files from these paths will be required on prod env and auto-loaded on dev env
+  config.app.load_paths = ["app/responders", "app/models", "app/services", "app/decorators"]
+  # files from these paths will be required on on any env
+  config.app.initialize_paths = ["app/observers", "app/routes"]
   config.app.cache_classes = false
 
   config.app.name = 'webmate'
@@ -23,4 +25,5 @@ Webmate::Application.configure do |config|
 
   config.websockets.enabled = true
   config.websockets.port = 80
+  config.websockets.namespace = 'http_over_websocket'
 end

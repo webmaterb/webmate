@@ -2,7 +2,9 @@ module Webmate
   class Websockets
     class << self
       def subscribe(session_id, request, &block)
-        user_id = request.env['warden'].user.id
+        user_id = request.env['warden'].try(:user).try(:id)
+
+        puts "PARAMS: #{request.params.inspect}"
 
         request.websocket do |websocket|
           # subscribe user to redis channel
@@ -14,12 +16,14 @@ module Webmate
           end
 
           websocket.onmessage do |message|
+            request = Webmate::SocketIO::Packets::Base.parse(message)
             response = block.call(Webmate::SocketIO::Packets::Base.parse(message))
             if response
               packet = Webmate::SocketIO::Packets::Message.build_response_packet(response)
               websocket.send(packet.to_packet)
             else
-              warn("empty response for #{message.inspect}")
+              packet = Webmate::SocketIO::Packets::Error.build_response_packet("empty response for #{message.inspect}")
+              websocket.send(packet.to_packet)
             end
           end
 

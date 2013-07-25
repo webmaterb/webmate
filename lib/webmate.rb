@@ -52,10 +52,13 @@ require 'webmate/presenters/base'
 require 'webmate/presenters/scoped'
 require 'webmate/presenters/base_presenter'
 
-# it's not correct. app config file should be required by app
-file = "#{Webmate.root}/config/config.rb"
-require file if FileTest.exists?(file)
+# require priority initialization files
+configatron.app.priotity_initialize_files.each do |path|
+  file = "#{Webmate.root}/#{path}"
+  require file if FileTest.exists?(file)
+end
 
+# auto-load files
 configatron.app.load_paths.each do |path|
   Dir[ File.join( Webmate.root, path, '**', '*.rb') ].each do |file|
     class_name = File.basename(file, '.rb')
@@ -65,9 +68,11 @@ configatron.app.load_paths.each do |path|
   end
 end
 
-# run observers
-Dir[ File.join( Webmate.root, 'app', 'observers', '**', '*.rb')].each do |file|
-  require file
+# require initialization files
+configatron.app.initialize_paths.each do |path|
+  Dir[ File.join( Webmate.root, path, '**', '*.rb')].each do |file|
+    require file
+  end
 end
 
 class Webmate::Application
