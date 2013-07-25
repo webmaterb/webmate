@@ -30,8 +30,8 @@ require 'webmate/responders/response'
 require 'webmate/responders/templates'
 require 'webmate/observers/base'
 require 'webmate/decorators/base'
-require 'webmate/route_helpers/routes_collection'
-require 'webmate/route_helpers/route'
+require 'webmate/routes/routes_collection'
+require 'webmate/routes/route'
 
 Bundler.require(:default, Webmate.env.to_sym)
 
@@ -76,11 +76,9 @@ configatron.app.initialize_paths.each do |path|
 end
 
 class Webmate::Application
-  #register Webmate::RouteHelpers::Channels
   register Sinatra::Reloader
   register SinatraMore::MarkupPlugin
 
-  #helpers Webmate::Views::Helpers
   helpers Sinatra::Cookies
   helpers Webmate::Sprockets::Helpers
 

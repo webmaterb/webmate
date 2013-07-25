@@ -2,8 +2,7 @@ module Webmate
   class Application < Sinatra::Base
     # override sinatra's method
     def route!(base = settings, pass_block = nil)
-      transport = @request.websocket? ? 'WS' : 'HTTP'
-      route_info = base.routes.match(@request.request_method, transport, @request.path)
+      route_info = find_route(base.routes, @request)
 
       # no route case - use default sinatra's processors
       if !route_info
@@ -12,11 +11,11 @@ module Webmate
       end
 
       if @request.websocket?
-        unless authorized_to_open_connection?(route_info[:params][:scope])
+        unless authorized_to_open_connection?(@request)
           return  [401, {}, []]
         end
 
-        session_id = route_info[:params][:session_id].inspect
+        session_id = route_info[:params][:session_id]
         Webmate::Websockets.subscribe(session_id, @request) do |message|
           if route_info = base.routes.match(message['method'], 'WS', message.path)
             request_info = {
@@ -47,6 +46,14 @@ module Webmate
 
         return response.rack_format
       end
+    end
+
+    # Find matched route by routes collection and request
+    # @param Webmate::Routes::Collection routes
+    # @param Sinatra::Request request
+    def find_route(routes, request)
+      transport = request.websocket? ? 'WS' : 'HTTP'
+      routes.match(request.request_method, transport, request.path)
     end
 
     # this method prepare data for responder
@@ -93,9 +100,9 @@ module Webmate
       request_params.merge(body_params)
     end
 
-    # update this method to create auth restrictions
-    def authorized_to_open_connection?(scope = :user)
-      return true
+    # Check that client with that scope is authorized to open connection
+    def authorized_to_open_connection?(request)
+      true
     end
 
     class << self

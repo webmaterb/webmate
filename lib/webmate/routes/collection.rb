@@ -1,5 +1,5 @@
-module Webmate
-  class RoutesCollection
+module Webmate::Routes
+  class Collection
     TRANSPORTS = [:ws, :http]
 
     attr_reader :routes
@@ -50,24 +50,28 @@ module Webmate
       route_options = { method: 'GET', transport: ['HTTP'] }
 
       # handshake
-      add_route(Webmate::Route.new(route_options.merge(
+      add_route(route_options.merge(
         path: "/#{namespace}/:version_id",
         responder: Webmate::SocketIO::Actions::Handshake,
         action: 'websocket'
-      )))
+      ))
 
       # transport connection
-      add_route(Webmate::Route.new(route_options.merge(
+      add_route(route_options.merge(
         transport: ["WS"],
         path: "/#{namespace}/:version_id/websocket/:session_id",
         responder: Webmate::SocketIO::Actions::Connection,
         action: 'open'
-      )))
+      ))
     end
 
     # Add router object to routes
     #   route - valid object of Webmate::Route class
     def add_route(route)
+      unless route.is_a?(Webmate::Routes::Base)
+        route = Webmate::Routes::Base.new(route)
+      end
+
       # add route to specific node of routes hash
       @routes[route.method.to_s.upcase] ||= {}
       route.transport.each do |transport|
@@ -95,7 +99,7 @@ module Webmate
         end
         route_options[:method] = method_name.to_sym
 
-        add_route(Webmate::Route.new(route_options))
+        add_route(route_options)
       end
     end
 

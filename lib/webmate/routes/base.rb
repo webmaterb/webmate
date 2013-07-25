@@ -1,5 +1,5 @@
-module Webmate
-  class Route
+module Webmate::Routes
+  class Base
     FIELDS = [:method, :path, :action, :transport, :responder, :route_regexp, :static_params]
     attr_reader *FIELDS
 
@@ -30,7 +30,7 @@ module Webmate
     #  result = {
     #    action: 'read',
     #    responder: CommentsResponder,
-    #    params: { 
+    #    params: {
     #      project_id: 'qwerty123',
     #      task_id: :asdf13,
     #      comment_id: :zxcv123
@@ -38,7 +38,7 @@ module Webmate
     #  }
     def match(request_path)
       if match_data = @route_regexp.match(request_path)
-        route_data = { 
+        route_data = {
           action: @action,
           responder: @responder,
           params: HashWithIndifferentAccess.new(static_params || {})
@@ -57,12 +57,12 @@ module Webmate
       end
     end
 
-    private 
+    private
 
     # /projects/:project_id/tasks/:task_id/comments/:comment_id
     # result should be
     # substitution_attrs = [:project_id, :task_id, :comment_id]
-    # route_regexp = 
+    # route_regexp =
     #   (?-mix:^\/projects\/([\w\d]*)\/tasks\/([\w\d]*)\/comments\/([\w\d]*)\/?$)
     #
     # substitute :resource_id elements with regexp group in order
