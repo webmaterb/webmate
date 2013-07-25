@@ -30,8 +30,8 @@ require 'webmate/responders/response'
 require 'webmate/responders/templates'
 require 'webmate/observers/base'
 require 'webmate/decorators/base'
-require 'webmate/routes/routes_collection'
-require 'webmate/routes/route'
+require 'webmate/routes/collection'
+require 'webmate/routes/base'
 
 Bundler.require(:default, Webmate.env.to_sym)
 

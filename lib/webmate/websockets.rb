@@ -39,7 +39,7 @@ module Webmate
         warn("user has been subscribed to channel '#{channel_name}'")
 
         subscriber.on(:message) do |channel, message_data|
-          response_data = Webmate::Application.restore(message_data)
+          response_data = Webmate::JSON.parse(message_data)
           packet = Webmate::SocketIO::Packets::Message.new(response_data)
 
           websocket.send(packet.to_packet)

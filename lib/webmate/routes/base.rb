@@ -2,6 +2,7 @@ module Webmate::Routes
   class Base
     FIELDS = [:method, :path, :action, :transport, :responder, :route_regexp, :static_params]
     attr_reader *FIELDS
+    attr_reader :regexp, :substitution_attrs
 
     # method: GET/POST/PUT/DELETE
     # path  : /user/123/posts/123/comments
@@ -17,8 +18,9 @@ module Webmate::Routes
         instance_variable_set("@#{field_name.to_s}", values[field_name])
       end
 
-      normalize_data_if_needed
-      @route_regexp ||= construct_match_regexp
+      normalize_data
+      create_matching_regexp
+      create_substitution_attrs
     end
 
     # method should check coincidence of path pattern and
@@ -37,55 +39,61 @@ module Webmate::Routes
     #    }
     #  }
     def match(request_path)
-      if match_data = @route_regexp.match(request_path)
-        route_data = {
-          action: @action,
-          responder: @responder,
-          params: HashWithIndifferentAccess.new(static_params || {})
+      if regexp.match(request_path)
+        {
+          action: action,
+          responder: responder,
+          params: (static_params || {}).merge(params_from_path(request_path))
         }
-        @substitution_attrs.each_with_index do |key, index|
-          if key == :splat
-            route_data[:params][key] ||= []
-            route_data[:params][key] += match_data[index.next].split('/')
-          else
-            route_data[:params][key] = match_data[index.next]
-          end
-        end
-        route_data
-      else
-        nil # not matched.
       end
+    end
+
+    def params_from_path(path)
+      match_data = regexp.match(path)
+      params = {}
+      substitution_attrs.each_with_index do |key, index|
+        if key == :splat
+          params[key] ||= []
+          params[key] += match_data[index.next].split('/')
+        else
+          params[key] = match_data[index.next]
+        end
+      end
+      params
     end
 
     private
 
-    # /projects/:project_id/tasks/:task_id/comments/:comment_id
-    # result should be
-    # substitution_attrs = [:project_id, :task_id, :comment_id]
-    # route_regexp =
-    #   (?-mix:^\/projects\/([\w\d]*)\/tasks\/([\w\d]*)\/comments\/([\w\d]*)\/?$)
-    #
-    # substitute :resource_id elements with regexp group in order
-    # to easy extract
-    def construct_match_regexp
-      substitutions = path.scan(/\/:(\w*)|\/(\*)/)
-      @substitution_attrs = substitutions.each_with_object([]) do |scan, attrs|
-        if scan[0]
-          attrs << scan[0].to_sym
-        elsif scan[1]
-          attrs << :splat
+      # /projects/:project_id/tasks/:task_id/comments/:comment_id
+      # result should be
+      # substitution_attrs = [:project_id, :task_id, :comment_id]
+      # route_regexp =
+      #   (?-mix:^\/projects\/([\w\d]*)\/tasks\/([\w\d]*)\/comments\/([\w\d]*)\/?$)
+      #
+      # substitute :resource_id elements with regexp group in order
+      # to easy extract
+      def create_substitution_attrs
+        substitutions = path.scan(/\/:(\w*)|\/(\*)/)
+        @substitution_attrs = substitutions.each_with_object([]) do |scan, attrs|
+          if scan[0]
+            attrs << scan[0].to_sym
+          elsif scan[1]
+            attrs << :splat
+          end
         end
       end
-      regexp_string = path.gsub(/\/:(\w*_id)/) {|t| "/([\\w\\d]*)" }
-      regexp_string = regexp_string.gsub(/\/\*/) {|t| "\/(.*)"}
-      Regexp.new("^#{regexp_string}\/?$")
-    end
 
-    # update attributes by following rules
-    # - responder should be a Class, not String
-    # - ..
-    def normalize_data_if_needed
-      @responder = @responder.to_s.classify.constantize unless @responder.is_a?(Class)
-    end
+      def create_matching_regexp
+        regexp_string = path.gsub(/\/:(\w*_id)/) {|t| "/([\\w\\d]*)" }
+        regexp_string = regexp_string.gsub(/\/\*/) {|t| "\/(.*)"}
+        @regexp = Regexp.new("^#{regexp_string}\/?$")
+      end
+
+      # update attributes by following rules
+      # - responder should be a Class, not String
+      # - ..
+      def normalize_data
+        @responder = @responder.to_s.classify.constantize unless @responder.is_a?(Class)
+      end
   end
 end

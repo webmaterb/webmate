@@ -85,7 +85,7 @@ module Webmate::Responders
 
     def build_connection
       EM::Hiredis.connect
-    rescue 
+    rescue
       warn("problem with connections to redis")
       nil
     end
@@ -119,7 +119,7 @@ module Webmate::Responders
       # this should be prepared data to create socket.io message
       # without any additional actions
       packet_data = Webmate::SocketIO::Packets::Message.prepare_packet_data(response)
-      data = Webmate::Application.dump(packet_data)
+      data = Webmate::JSON.dump(packet_data)
 
       channels_to_publish.each {|channel_name| publisher.publish(channel_name, data) }
     end

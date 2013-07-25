@@ -1,7 +1,5 @@
 require 'spec_helper'
 
-# responder to use as param for route creation.
-# should not be used for another
 class TestResponder; end
 
 def build_route_for(path, action = "any", responder = "test_responder")
@@ -40,8 +38,9 @@ describe Webmate::Routes::Base do
       result = build_route_for('/projects/*').match("/projects/qwerty/code")
     end
 
-    it "should return nil for not existing routes" do
-      route  = build_route_for('/projects/*')
+    it "should return nil for unmatched route" do
+      route  = build_route_for('/foo').match('/bar')
+      route.should be_nil
     end
   end
 end

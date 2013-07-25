@@ -8,24 +8,27 @@ module Webmate::Routes
       @routes = {}
       @resource_scope = []
 
-      websockets_enabled = configatron.websockets.enabled
-      websockets_enabled = true if websockets_enabled.blank?
-      enable_websockets_support if websockets_enabled
+      enable_websockets if configatron.websockets.enabled
     end
 
     # Call this method to define routes in application
-    def define_routes(&block)
+    # Examples:
+    #   routes = Webmate::Routes::Collection.new
+    #   routes.define do
+    #     resources :projects
+    #   end
+    def define(&block)
       instance_eval(&block)
     end
 
     # Get list of matched routes
-    #   method    - GET/POST/PUT/PATCH/DELETE
-    #   transport - HTTP / WS [ HTTPS / WSS ]
-    #   path      - /projects/123/tasks
     #
+    # @param String method    - GET/POST/PUT/PATCH/DELETE
+    # @param String transport - HTTP / WS [ HTTPS / WSS ]
+    # @param String path      - /projects/123/tasks
+    # @return [Hash, nil]
     def match(method, transport, path)
-      routes = get_routes(method, transport)
-      routes.each do |route|
+      get_routes(method, transport).each do |route|
         if info = route.match(path)
           return info
         end
@@ -33,6 +36,11 @@ module Webmate::Routes
       nil
     end
 
+    # Get routes by method and transport
+    #
+    # @param String method    - GET/POST/PUT/PATCH/DELETE
+    # @param String transport - HTTP / WS [ HTTPS / WSS ]
+    # @return Array list of routes
     def get_routes(method, transport)
       @routes[method] ||= {}
       @routes[method][transport] || []
@@ -43,7 +51,7 @@ module Webmate::Routes
     # if websockets enabled, we should add specific http routes
     #   - for handshake          [ get session id ]
     #   - for connection opening [ switch protocol from http to ws ]
-    def enable_websockets_support
+    def enable_websockets
       namespace = configatron.websockets.namespace
       namespace = 'http_over_websocket' if namespace.blank?
 
@@ -66,7 +74,8 @@ module Webmate::Routes
     end
 
     # Add router object to routes
-    #   route - valid object of Webmate::Route class
+    #
+    # @param [Webmate::Routes::Base, Hash] route
     def add_route(route)
       unless route.is_a?(Webmate::Routes::Base)
         route = Webmate::Routes::Base.new(route)
@@ -80,8 +89,9 @@ module Webmate::Routes
     end
 
     # define methods for separate routes
-    #   get '/path', to: , transport: ,
-    # or
+    #
+    # Examples:
+    #   get '/path', to: 'tasks#list', transport: [:http]
     #   resources :projects
     #     member do
     #       get 'read_formatted'
