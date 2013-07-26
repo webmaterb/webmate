@@ -15,6 +15,7 @@ require 'webmate/application'
 require 'webmate/config'
 require 'webmate/websockets'
 require 'webmate/logger'
+require 'webmate/support/json'
 
 require 'bundler'
 Bundler.setup
@@ -32,6 +33,7 @@ require 'webmate/observers/base'
 require 'webmate/decorators/base'
 require 'webmate/routes/collection'
 require 'webmate/routes/base'
+require 'webmate/routes/handler'
 
 Bundler.require(:default, Webmate.env.to_sym)
 

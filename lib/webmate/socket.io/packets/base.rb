@@ -23,8 +23,8 @@ module Webmate
           @packet_data  = packet_data.with_indifferent_access
         end
 
-        # packet should be created by socket.io spec 
-        #[message type] ':' [message id ('+')] ':' [message endpoint] (':' [message data]) 
+        # packet should be created by socket.io spec
+        # [message type] ':' [message id ('+')] ':' [message endpoint] (':' [message data])
         # and webmate spec
         # message_data = {
         #   method: GET/POST/...
@@ -59,14 +59,13 @@ module Webmate
         end
 
         # convert response from Responders::Base to socket io message
-        # 
+        #
         def self.build_response_packet(response)
           new(self.prepare_packet_data(response))
         end
 
         def self.prepare_packet_data(response)
           packet_data = {
-            action:   response.action,
             body:     response.data,
             path:     response.path,
             params:   response.params,
@@ -75,12 +74,11 @@ module Webmate
         end
 
         # socket io spec
-        #[message type] ':' [message id ('+')] ':' [message endpoint] (':' [message data]) 
+        #[message type] ':' [message id ('+')] ':' [message endpoint] (':' [message data])
         def to_packet
           data = {
-            action: action,
-            request: { 
-              path:     path, 
+            request: {
+              path:     path,
               metadata: metadata
             },
             response: {
@@ -88,7 +86,7 @@ module Webmate
               status: status || 200
             }
           }
-          encoded_data = Yajl::Encoder.new.encode(data)
+          encoded_data = JSON.dump(data)
           [
             packet_type_id,
             packet_id,
@@ -117,10 +115,6 @@ module Webmate
           packet_data[:path]
         end
 
-        def action
-          packet_data[:action]
-        end
-
         def params
           packet_data[:params]
         end
@@ -137,14 +131,8 @@ module Webmate
           @id ||= generate_packet_id
         end
 
-        # update counter
-        def packet_id=(new_packet_id)
-          self.class.current_id = new_packet_id
-          @id ||= generate_packet_id
-        end
-
         # unique packet id
-        # didn't find any influence for now, 
+        # didn't find any influence for now,
         # uniqueness not matter
         def generate_packet_id
           self.class.current_id ||= 0

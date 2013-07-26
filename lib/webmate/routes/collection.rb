@@ -28,7 +28,7 @@ module Webmate::Routes
     # @param String path      - /projects/123/tasks
     # @return [Hash, nil]
     def match(method, transport, path)
-      get_routes(method, transport).each do |route|
+      get_routes(method, transport.upcase).each do |route|
         if info = route.match(path)
           return info
         end

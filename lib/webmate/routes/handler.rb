@@ -2,13 +2,12 @@ module Webmate::Routes
   class Handler
     attr_accessor :application, :request
 
-    def initalize(application, request)
+    def initialize(application, request)
       @application = application
       @request = request
     end
 
     def handle(route_info)
-      responder = route_info.delete(:responder)
       if request.websocket?
         unless websocket_connection_authorized?(request)
           return  [401, {}, []]
@@ -20,7 +19,7 @@ module Webmate::Routes
             request_info = params_from_websoket(route_info, message)
             # here we should create subscriber who can live
             # between messages.. but not between requests.
-            responder.new(request_info).respond
+            route_info[:responder].new(request_info).respond
           end
         end
 
@@ -31,8 +30,8 @@ module Webmate::Routes
       else # HTTP
         # this should return correct Rack response..
         request_info = params_from_http(route_info)
-        response = responder.new(request_info).respond
-        response.rack_format
+        response = route_info[:responder].new(request_info).respond
+        response.to_rack
       end
     end
 
@@ -40,7 +39,7 @@ module Webmate::Routes
     # @param Hash request_info = { path: '/', metadata: {}, action: 'index', params: { test: true } }
     def params_from_http(route_info)
       # create unified request info
-      request_params = parsed_request_params
+      request_params = http_body_request_params
       metadata = request_params.delete(:metadata)
       {
         path: request.path,

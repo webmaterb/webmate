@@ -11,25 +11,7 @@ module Webmate::Responders
       @path = options[:path] || "/"
     end
 
-    def json
-      Yajl::Encoder.new.encode(self.packed)
-    end
-
-    def packed
-      { action: @action, resource: @resource, response: @data, params: safe_params }
-    end
-
-    def safe_params
-      safe_params = {}
-      params.each do |key, value|
-        if value.is_a?(String) || value.is_a?(Integer)
-          safe_params[key] = value
-        end
-      end
-      safe_params
-    end
-
-    def rack_format
+    def to_rack
       [@status, {}, @data]
     end
   end
