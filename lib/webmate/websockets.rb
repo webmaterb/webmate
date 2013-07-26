@@ -15,14 +15,12 @@ module Webmate
 
           websocket.onmessage do |message|
             request = Webmate::SocketIO::Packets::Base.parse(message)
-            response = block.call(request)
-            if response
-              packet = Webmate::SocketIO::Packets::Message.build_response_packet(response)
-              websocket.send(packet.to_packet)
-            else
-              packet = Webmate::SocketIO::Packets::Error.build_response_packet("{error: 'empty response for #{message.inspect}'}")
-              websocket.send(packet.to_packet)
+            response = begin
+              block.call(request) || Responders::Response.build_not_found("Action not found: #{request.path}")
+            rescue Exception => e
+              Responders::Response.build_error("Error while processing request: #{request.path}, #{e.message}")
             end
+            websocket.send(response.to_packet)
           end
 
           websocket.onclose do

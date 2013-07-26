@@ -14,12 +14,10 @@ module Webmate::Routes
         end
 
         session_id = route_info[:params][:session_id]
-        Webmate::Websockets.subscribe(session_id, request) do |message|
-          if route_info = application.routes.match(message['method'], 'WS', message.path)
-            request_info = params_from_websoket(route_info, message)
-            # here we should create subscriber who can live
-            # between messages.. but not between requests.
-            route_info[:responder].new(request_info).respond
+        Webmate::Websockets.subscribe(session_id, request) do |request|
+          if route_info = application.routes.match(request[:method], 'WS', request.path)
+            request_info = prepare_response_params(route_info, request)
+            response = route_info[:responder].new(request_info).respond
           end
         end
 
@@ -28,18 +26,17 @@ module Webmate::Routes
         [-1, {}, []]
 
       else # HTTP
-        # this should return correct Rack response..
-        request_info = params_from_http(route_info)
+        request_info = prepare_response_params(route_info, request)
         response = route_info[:responder].new(request_info).respond
         response.to_rack
       end
     end
 
-    # this method prepare data for responder from http request
+    # this method prepare data for responder from request
     # @param Hash request_info = { path: '/', metadata: {}, action: 'index', params: { test: true } }
-    def params_from_http(route_info)
+    def prepare_response_params(route_info, request)
       # create unified request info
-      request_params = http_body_request_params
+      request_params = request_params_all(request)
       metadata = request_params.delete(:metadata)
       {
         path: request.path,
@@ -50,25 +47,15 @@ module Webmate::Routes
       }
     end
 
-    # this method prepare data for responder from http request
-    def params_from_websoket(route_info, message)
-      {
-        path: message.path,
-        metadata: message.metadata || {},
-        action: route_info[:action],
-        params: message.params.merge(route_info[:params])
-      }
-    end
-
     # Get and parse all request params
-    def http_body_request_params
+    def request_params_all(request)
       request_params = HashWithIndifferentAccess.new
-      request_params.merge!(@request.params || {})
+      request_params.merge!(request.params || {})
 
       # read post or put params. this will erase  params
       # {code: 123, mode: 123}
       # "code=123&mode=123"
-      request_body = @request.body.read
+      request_body = request.body.read
       if request_body.present?
         body_params = begin
           JSON.parse(request_body) # {code: 123, mode: 123}

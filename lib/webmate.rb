@@ -37,6 +37,7 @@ require 'webmate/routes/handler'
 
 Bundler.require(:default, Webmate.env.to_sym)
 
+require 'webmate/socket.io/request'
 require 'webmate/socket.io/actions/handshake'
 require 'webmate/socket.io/actions/connection'
 require 'webmate/socket.io/packets/base'

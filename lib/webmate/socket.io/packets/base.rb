@@ -23,39 +23,30 @@ module Webmate
           @packet_data  = packet_data.with_indifferent_access
         end
 
-        # packet should be created by socket.io spec
-        # [message type] ':' [message id ('+')] ':' [message endpoint] (':' [message data])
-        # and webmate spec
-        # message_data = {
+        # Parse packet created by socket.io spec
+        # Packet format
+        #   [packet type] ':' [packet id ('+')] ':' [packet endpoint] (':' [packet data])
+        #
+        # packet_data = {
         #   method: GET/POST/...
         #   path: '/projects'
-        #   params: {}
-        #   metadata: { data should be returned back with answer }
+        #   params: {
+        #     metadata: { data should be returned back with response },
+        #     foor: 'bar'
+        #     // and any other paranms
+        #   }
+        #   headers: [ {"SomeHeader": "SomeHeaderValue"} ]
         # }
         def self.parse(packet)
           # last element is encoded json array, so there can be many ':'
           packet_type_id, packet_id, packet_endpoint, json_data = packet.split(':', 4)
 
-          packet_data = (Yajl::Parser.parse(json_data) || {}).with_indifferent_access
-
-          if packet_data[:params].is_a?(String)
-            packet_data[:params] = Yajl::Parser.parse(packet_data[:params])
-          end
-
-          if packet_data[:metadata].is_a?(String)
-            packet_data[:metadata] = Yajl::Parser.parse(packet_data[:metadata])
-          end
-
-          packet = OpenStruct.new(
+          packet_data = (JSON.parse(json_data) rescue {}).with_indifferent_access
+          Webmate::SocketIO::Request.new(
             path: packet_data[:path],
-            method: packet_data[:method],
-            params: packet_data[:params] || {},
-            metadata: packet_data[:metadata] || {},
-            packet_id: packet_id,
-            packet_endpoint: packet_endpoint
+            method: packet_data[:method].upcase,
+            params: packet_data[:params] || {}
           )
-
-          packet
         end
 
         # convert response from Responders::Base to socket io message
@@ -69,7 +60,8 @@ module Webmate
             body:     response.data,
             path:     response.path,
             params:   response.params,
-            metadata: response.metadata
+            metadata: response.metadata,
+            status:   response.status
           }
         end
 
